@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语六级1000高频词 | 2025版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#6B7280',
+                        light: '#F3F4F6',
+                        card: '#FFFFFF',
+                        accent: '#36D399',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .word-card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .search-input {
+                @apply focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none;
+            }
+            .filter-select {
+                @apply focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none cursor-pointer;
+            }
+            .phonetic-text {
+                @apply text-secondary text-sm italic;
+            }
+            .freq-tag {
+                @apply bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full;
+            }
+            .word-click {
+                @apply cursor-pointer hover:text-primary font-medium;
+            }
+            .mark-btn {
+                @apply bg-accent text-white py-2 px-4 rounded-lg shadow-md hover:bg-accent/90 transition-all duration-300 active:scale-95;
+            }
+            .date-input {
+                @apply focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none cursor-pointer;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-16 relative">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <header class="text-center mb-8">
+            <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-bold text-gray-800 mb-2">🍁英语六级1000高频词</h1>
+            <p class="text-secondary text-sm md:text-base">2025版 | 点击单词发音 · 考频筛选 · 中英文搜索 · 背诵标记</p>
+        </header>
+
+        <!-- 日期选择器 + 搜索 + 筛选栏 -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-8 items-center justify-center">
+            <div class="relative w-full sm:w-2/3 lg:w-1/2">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-secondary"></i>
+                <input 
+                    type="text" 
+                    id="search-input"
+                    placeholder="搜索单词/中文意思（如：defect/缺点）"
+                    class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 bg-card search-input"
+                >
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <select 
+                    id="filter-select"
+                    class="w-full sm:w-48 px-4 py-3 rounded-lg border border-gray-200 bg-card filter-select"
+                >
+                    <option value="default" selected>默认顺序（原单词表）</option>
+                    <option value="desc">考频降序（高频在前）</option>
+                    <option value="asc">考频升序（低频在前）</option>
+                </select>
+                <!-- 日期选择器 -->
+                <div class="w-full sm:w-auto">
+                    <input
+                        type="date"
+                        id="date-picker"
+                        class="w-full sm:w-48 px-4 py-3 rounded-lg border border-gray-200 bg-card date-input"
+                    >
+                </div>
+            </div>
+        </div>
+
+        <div id="word-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <div id="no-result" class="hidden text-center py-20 text-secondary">
+            <i class="fas fa-search-minus text-4xl mb-4"></i>
+            <p>未找到匹配的单词，请更换关键词</p>
+        </div>
+    </div>
+
+    <!-- 侧边标记面板 -->
+    <div class="fixed right-4 bottom-4 md:right-8 md:bottom-8 z-50 flex flex-col gap-3">
+        <div class="bg-card p-3 rounded-lg shadow-lg border border-gray-100 w-full md:w-56">
+            <p class="text-sm text-secondary mb-2">今日：<span id="today-date" class="font-medium text-gray-800"></span></p>
+            <button id="mark-today" class="mark-btn w-full flex items-center justify-center gap-2">
+                <i class="fas fa-bookmark"></i>
+                <span>标记今日背诵位置</span>
+            </button>
+            <p id="mark-tip" class="text-xs text-secondary mt-2 text-center hidden">
+                已标记到第 <span id="marked-index" class="text-accent font-medium"></span> 个单词
+            </p>
+        </div>
+        <!-- 手机端折叠按钮 -->
+        <button id="collapse-panel" class="md:hidden bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-md border border-gray-100">
+            <i class="fas fa-chevron-up text-secondary"></i>
+        </button>
+    </div>
+
+    <script>
+        // ************************ 单词数据（请按格式自行添加） ************************
+        const wordData = [
+{"word":"defect","phonetic":"[ˈdiːfekt]","frequency":15,"meaning":"缺点;瑕疵"},
+{"word":"flexible","phonetic":"[ˈfleksəbl]","frequency":11,"meaning":"易弯曲的;灵活的"},
+{"word":"scent","phonetic":"[sent]","frequency":10,"meaning":"香味;踪迹v.嗅到"},
+{"word":"collide","phonetic":"[kə'laɪd]","frequency":16,"meaning":"碰撞;冲突"},
+{"word":"tragic","phonetic":"['trædʒɪk]","frequency":18,"meaning":"悲惨的;悲剧的"},
+{"word":"erroneous","phonetic":"[ɪˈrəʊniəs]","frequency":18,"meaning":"错误的;不正确的"},
+{"word":"shuttle","phonetic":"[ˈʃʌtl]","frequency":8,"meaning":"航天飞机;梭子"},
+{"word":"participate","phonetic":"[pɑːˈtɪsɪpeɪt]","frequency":21,"meaning":"(in)参加"},
+{"word":"advantage","phonetic":"[ədˈvæntɪdʒ]","frequency":19,"meaning":"优点;好处"},
+{"word":"exceptional","phonetic":"[ɪkˈsepʃənl]","frequency":29,"meaning":"杰出的;异常的"},
+{"word":"hinder","phonetic":"[ˈhɪndə(r)]","frequency":12,"meaning":"妨碍"},
+{"word":"hesitate","phonetic":"[ˈhezɪteɪt]","frequency":13,"meaning":"犹豫;不情愿"},
+{"word":"compromise","phonetic":"[ˈkɒmprəmaɪz]","frequency":13,"meaning":"n./v.妥协"},
+{"word":"underlying","phonetic":"[ˌʌndərˈlaɪɪŋ]","frequency":8,"meaning":"含蓄的;潜在的"},
+{"word":"feedback","phonetic":"[ˈfiːdbæk]","frequency":9,"meaning":"反馈"},
+{"word":"qualification","phonetic":"[ˌkwɒlɪfɪˈkeɪʃn]","frequency":14,"meaning":"合格证书"},
+{"word":"variable","phonetic":"[ˈveriəbl]","frequency":7,"meaning":"adj.易变的n.变量"},
+{"word":"enthusiastic","phonetic":"[ɪnˌθjuːziˈæstɪk]","frequency":6,"meaning":"满腔热情的"},
+{"word":"precede","phonetic":"[prɪˈsiːd]","frequency":7,"meaning":"在...之前;先于"},
+{"word":"range","phonetic":"[reɪndʒ]","frequency":13,"meaning":"一系列;范围;距离"},
+{"word":"episode","phonetic":"[ˈepɪsəʊd]","frequency":5,"meaning":"一个事件;插曲"},
+{"word":"abuse","phonetic":"[əˈbjuːz]","frequency":13,"meaning":"v.滥用;虐待;辱骂"},
+{"word":"condemn","phonetic":"[kənˈdem]","frequency":9,"meaning":"谴责;宣判"},
+{"word":"appreciate","phonetic":"[əˈpriːʃieɪt]","frequency":16,"meaning":"重视;欣赏"},
+{"word":"sculpture","phonetic":"[ˈskʌlptʃə(r)]","frequency":5,"meaning":"雕刻;雕刻作品"},
+{"word":"weird","phonetic":"[wɪəd]","frequency":4,"meaning":"古怪的;怪诞的"},
+{"word":"previous","phonetic":"[ˈpriːviəs]","frequency":6,"meaning":"以前的"},
+{"word":"wander","phonetic":"[ˈwɒndə(r)]","frequency":8,"meaning":"漫游;走神"},
+{"word":"supervise","phonetic":"[ˈsuːpəvaɪz]","frequency":16,"meaning":"监督;管理"},
+{"word":"mortal","phonetic":"[ˈmɔːtl]","frequency":7,"meaning":"致命的"},
+{"word":"explosive","phonetic":"[ɪkˈspləʊsɪv]","frequency":11,"meaning":"adj爆炸的n.炸药"},
+{"word":"competence","phonetic":"[ˈkɒmpɪtəns]","frequency":18,"meaning":"能力;胜任"},
+{"word":"investigate","phonetic":"[ɪnˈvestɪɡeɪt]","frequency":11,"meaning":"调查;研究"},
+{"word":"eliminate","phonetic":"[ɪˈlɪmɪneɪt]","frequency":13,"meaning":"排除;淘汰"},
+{"word":"migrate","phonetic":"[maɪˈɡreɪt]","frequency":6,"meaning":"迁移"},
+{"word":"reckless","phonetic":"['rekləs]","frequency":7,"meaning":"鲁莽的"},
+{"word":"penalty","phonetic":"[ˈpenəlti]","frequency":17,"meaning":"处罚;罚金"},
+{"word":"impose","phonetic":"[ɪmˈpəʊz]","frequency":4,"meaning":"(on)把...强加于"},
+{"word":"accomplish","phonetic":"[əˈkʌmplɪʃ]","frequency":21,"meaning":"完成;实现"},
+{"word":"sponsor","phonetic":"[ˈspɒnsə(r)]","frequency":14,"meaning":"发起者;赞助者"},
+{"word":"tumble","phonetic":"['tʌmbl]","frequency":9,"meaning":"跌倒;暴跌"},
+{"word":"uphold","phonetic":"[ʌpˈhəʊld]","frequency":13,"meaning":"支持;维护"},
+{"word":"propel","phonetic":"[prə'pel]","frequency":22,"meaning":"推动;驱使"},
+{"word":"descent","phonetic":"[dɪ'sent]","frequency":12,"meaning":"下降;斜坡"},
+{"word":"drawback","phonetic":"[ˈdrɔːbæk]","frequency":11,"meaning":"缺点;不利条件"},
+{"word":"illuminate","phonetic":"[ɪˈluːmɪneɪt]","frequency":8,"meaning":"照明;阐明"},
+{"word":"adhere","phonetic":"[ədˈhɪə(r)]","frequency":11,"meaning":"黏附;遵守;坚持"},
+{"word":"indicative","phonetic":"[ɪn'dɪkətɪv]","frequency":8,"meaning":"象征的"},
+{"word":"reckon","phonetic":"['rekən]","frequency":9,"meaning":"认为;考虑到"},
+{"word":"redundant","phonetic":"[rɪ'dʌndənt]","frequency":16,"meaning":"多余的"},
+{"word":"dominate","phonetic":"[ˈdɒmɪneɪt]","frequency":7,"meaning":"支配"},
+{"word":"reverse","phonetic":"[rɪˈvɜːs]","frequency":12,"meaning":"撤销反转adj.反面的"},
+{"word":"proportion","phonetic":"[prəˈpɔːʃn]","frequency":5,"meaning":"比例;部分"},
+{"word":"calculate","phonetic":"[ˈkælkjʊleɪt]","frequency":13,"meaning":"计算;估计"},
+{"word":"identical","phonetic":"[aɪˈdentɪkl]","frequency":15,"meaning":"相同的"},
+{"word":"innovation","phonetic":"[ˌɪnəˈveɪʃn]","frequency":10,"meaning":"改革;创新"},
+{"word":"intrigued","phonetic":"[ɪnˈtriːɡd]","frequency":9,"meaning":"好奇的;被迷住的"},
+{"word":"epidemic","phonetic":"[ˌepɪ'demɪk]","frequency":8,"meaning":"流行病"},
+{"word":"encounter","phonetic":"[ɪnˈkaʊntə(r)]","frequency":11,"meaning":"v./n.遇到;遭遇"},
+{"word":"accelerate","phonetic":"[əkˈseləreɪt]","frequency":8,"meaning":"(使)加快"},
+{"word":"energetic","phonetic":"[ˌenəˈdʒetɪk]","frequency":11,"meaning":"精力充沛的"},
+{"word":"heighten","phonetic":"[ˈhaɪtn]","frequency":5,"meaning":"(使)提高;加强"},
+{"word":"passive","phonetic":"['pæsɪv]","frequency":12,"meaning":"被动的;消极的"},
+{"word":"consumption","phonetic":"[kənˈsʌmpʃn]","frequency":8,"meaning":"消耗量;消耗"},
+{"word":"bald","phonetic":"[bɔːld]","frequency":12,"meaning":"秃的;磨光的"},
+{"word":"spill","phonetic":"[spɪl]","frequency":9,"meaning":"v.(使)溢出;(使)洒落"},
+{"word":"calorie","phonetic":"[ˈkæləri]","frequency":9,"meaning":"卡(路里)"},
+{"word":"doubtful","phonetic":"[ˈdaʊtfl]","frequency":7,"meaning":"难以预测的;可疑的"},
+{"word":"prevalent","phonetic":"['prevələnt]","frequency":8,"meaning":"流行的;普遍的"},
+{"word":"appeal","phonetic":"[əˈpiːl]","frequency":11,"meaning":"n./v.恳求;吸引力;上诉"},
+{"word":"dump","phonetic":"[dʌmp]","frequency":6,"meaning":"v.倾倒;丢弃n.垃圾场"},
+{"word":"yell","phonetic":"[jel]","frequency":12,"meaning":"叫喊"},
+{"word":"saying","phonetic":"['seɪɪŋ]","frequency":7,"meaning":"谚语"},
+{"word":"forecast","phonetic":"[ˈfɔːkɑːst]","frequency":15,"meaning":"n./v.预测"},
+{"word":"brew","phonetic":"[bruː]","frequency":14,"meaning":"v.酿造;冲泡n.茶;咖啡"},
+{"word":"circulation","phonetic":"[ˌsɜːkjəˈleɪʃn]","frequency":6,"meaning":"循环;流通"},
+{"word":"perceive","phonetic":"[pəˈsiːv]","frequency":12,"meaning":"感知;认识到"},
+{"word":"appearance","phonetic":"[əˈpɪərəns]","frequency":13,"meaning":"出现;外表"},
+{"word":"export","phonetic":"[ɪkˈspɔːt/ˈekspɔːt]","frequency":8,"meaning":"n.出口(物)v.出口"},
+{"word":"transfer","phonetic":"[trænsˈfɜː(r)/ˈtrænsfɜː(r)]","frequency":7,"meaning":"v.转移;调动;转学n.转移;调动;转学"},
+{"word":"genetic","phonetic":"[dʒəˈnetɪk]","frequency":8,"meaning":"遗传(学)的"},
+{"word":"offspring","phonetic":"[ˈɒfsprɪŋ]","frequency":15,"meaning":"后代"},
+{"word":"distribute","phonetic":"[dɪˈstrɪbjuːt]","frequency":9,"meaning":"分布;发散"},
+{"word":"accompany","phonetic":"[əˈkʌmpəni]","frequency":18,"meaning":"陪伴;伴随"},
+{"word":"persist","phonetic":"[pəˈsɪst]","frequency":13,"meaning":"坚持不懈;持续"},
+{"word":"differentiate","phonetic":"[ˌdɪfəˈrenʃieɪt]","frequency":5,"meaning":"区别;使不同"},
+{"word":"perspective","phonetic":"[pəˈspektɪv]","frequency":6,"meaning":"视角;透视图"},
+{"word":"fabricate","phonetic":"[ˈfæbrɪkeɪt]","frequency":4,"meaning":"捏造;制造"},
+{"word":"abundance","phonetic":"[əˈbʌndəns]","frequency":9,"meaning":"大量;充足"},
+{"word":"batch","phonetic":"[bætʃ]","frequency":5,"meaning":"一批;一群;一批生产量"},
+{"word":"elapse","phonetic":"[ɪˈlæps]","frequency":8,"meaning":"v.(时间)流逝"},
+{"word":"seal","phonetic":"[siːl]","frequency":11,"meaning":"n.封条;图章;海豹"},
+{"word":"mature","phonetic":"[məˈtʃʊə(r)]","frequency":15,"meaning":"成熟的;成年人的"},
+{"word":"combination","phonetic":"[ˌkɒmbɪˈneɪʃn]","frequency":7,"meaning":"结合(体)"},
+{"word":"lean","phonetic":"[liːn]","frequency":6,"meaning":"v.倾斜;靠adj.瘦的n.瘦肉"},
+{"word":"incline","phonetic":"[ɪnˈklaɪn]","frequency":11,"meaning":"v.(使)倾斜n.斜坡"},
+{"word":"index","phonetic":"[ˈɪndeks]","frequency":8,"meaning":"n.索引;指数v.为...编索引"},
+{"word":"nutrition","phonetic":"[njuˈtrɪʃn]","frequency":16,"meaning":"营养"},
+{"word":"constant","phonetic":"[ˈkɒnstənt]","frequency":12,"meaning":"持续不断的"},
+{"word":"regardless","phonetic":"[rɪˈɡɑːdləs]","frequency":5,"meaning":"不管怎样"},
+{"word":"refund","phonetic":"[ˈriːfʌnd]","frequency":10,"meaning":"n.退款v.退还"},
+{"word":"discern","phonetic":"[dɪˈsɜːn]","frequency":15,"meaning":"察觉出;识别"},
+{"word":"stumble","phonetic":"[ˈstʌmbl]","frequency":13,"meaning":"绊倒;跌跌撞撞地走"},
+{"word":"negligible","phonetic":"[ˈneɡlɪdʒəbl]","frequency":8,"meaning":"可忽略不计的"},
+{"word":"assault","phonetic":"[əˈsɔːlt]","frequency":15,"meaning":"攻击;袭击"},
+{"word":"transit","phonetic":"[ˈtrænzɪt]","frequency":16,"meaning":"运输"},
+{"word":"concrete","phonetic":"[ˈkɒŋkriːt]","frequency":12,"meaning":"adj.具体的n.混凝土"},
+{"word":"magnify","phonetic":"[ˈmægnɪfaɪ]","frequency":18,"meaning":"放大;夸大"},
+{"word":"poisonous","phonetic":"[ˈpɔɪzənəs]","frequency":11,"meaning":"有毒的;恶毒的"},
+{"word":"virtual","phonetic":"[ˈvɜːtʃuəl]","frequency":21,"meaning":"事实上的;虚拟的"},
+{"word":"thesis","phonetic":"[ˈθiːsɪs]","frequency":21,"meaning":"论文;毕业论文"},
+{"word":"predecessor","phonetic":"[ˈpriːdəsesə(r)]","frequency":5,"meaning":"前辈;前任"},
+{"word":"geology","phonetic":"[dʒiˈɒlədʒi]","frequency":8,"meaning":"地质学"},
+{"word":"invaluable","phonetic":"[ɪnˈvæljuəbl]","frequency":8,"meaning":"宝贵的;无价的"},
+{"word":"adjacent","phonetic":"[əˈdʒeɪsnt]","frequency":15,"meaning":"(to)相邻的"},
+{"word":"captive","phonetic":"[ˈkæptɪv]","frequency":7,"meaning":"adj.被捕获的n.俘虏"},
+{"word":"catholic","phonetic":"[ˈkæθlɪk]","frequency":5,"meaning":"天主教的"},
+{"word":"adjoin","phonetic":"[əˈdʒɔɪn]","frequency":9,"meaning":"贴近;与...毗连"},
+{"word":"ballet","phonetic":"[ˈbæleɪ]","frequency":11,"meaning":"芭蕾舞(团)"},
+{"word":"traditional","phonetic":"[trəˈdɪʃənl]","frequency":21,"meaning":"传统的;惯例的"},
+{"word":"extraordinary","phonetic":"[ɪkˈstrɔːdnri]","frequency":15,"meaning":"非凡的"},
+{"word":"perpetual","phonetic":"[pəˈpetʃuəl]","frequency":14,"meaning":"永恒的;不断的"},
+{"word":"prejudice","phonetic":"[ˈpredʒudɪs]","frequency":7,"meaning":"n.偏见v.使有成见"},
+{"word":"fancy","phonetic":"[ˈfænsi]","frequency":11,"meaning":"v./n.喜欢;想象力"},
+{"word":"optical","phonetic":"[ˈɒptɪkl]","frequency":8,"meaning":"光(学)的;视觉的"},
+{"word":"consequence","phonetic":"[ˈkɒnsɪkwəns]","frequency":4,"meaning":"结果;重要(性)"},
+{"word":"astronomy","phonetic":"[əˈstrɒnəmi]","frequency":13,"meaning":"天文学"},
+{"word":"catastrophe","phonetic":"[kəˈtæstrəfi]","frequency":22,"meaning":"大灾难"},
+{"word":"foresee","phonetic":"[fɔːˈsiː]","frequency":16,"meaning":"预见;预知"},
+{"word":"prescribe","phonetic":"[prɪˈskraɪb]","frequency":8,"meaning":"指定;开处方"},
+{"word":"certify","phonetic":"[ˈsɜːtɪfaɪ]","frequency":11,"meaning":"证明;发证书给"},
+{"word":"absurd","phonetic":"[əbˈsɜːd]","frequency":8,"meaning":"荒谬的"},
+{"word":"donate","phonetic":"[dəʊˈneɪt]","frequency":18,"meaning":"捐赠"},
+{"word":"transplant","phonetic":"[trænsˈplɑːnt]","frequency":6,"meaning":"v./n.移植"},
+{"word":"ample","phonetic":"[ˈæmpl]","frequency":18,"meaning":"足够的;大量的"},
+{"word":"dynamic","phonetic":"[daɪˈnæmɪk]","frequency":13,"meaning":"有活力的n.动力"},
+{"word":"terrific","phonetic":"[təˈrɪfɪk]","frequency":12,"meaning":"极妙的;极大的"},
+{"word":"cafeteria","phonetic":"[ˌkæfəˈtɪəriə]","frequency":8,"meaning":"自助餐馆;食堂"},
+{"word":"disregard","phonetic":"[ˌdɪsrɪˈgɑːd]","frequency":6,"meaning":"v.不理会n.漠视"},
+{"word":"overload","phonetic":"[ˌəʊvəˈləʊd]","frequency":5,"meaning":"v.超过负荷n.超载"},
+{"word":"compel","phonetic":"[kəmˈpel]","frequency":21,"meaning":"强迫"},
+{"word":"ignorant","phonetic":"[ˈɪgnərənt]","frequency":8,"meaning":"(of)无知的"},
+{"word":"aggravate","phonetic":"[ˈægrəveɪt]","frequency":23,"meaning":"加重;激怒"},
+{"word":"inherent","phonetic":"[ɪnˈherənt]","frequency":6,"meaning":"(in)内在的;固有的"},
+{"word":"restore","phonetic":"[rɪˈstɔː(r)]","frequency":16,"meaning":"恢复;归还"},
+{"word":"preview","phonetic":"[ˈpriːvjuː]","frequency":11,"meaning":"预演;预告(片)"},
+{"word":"explicit","phonetic":"[ɪkˈsplɪsɪt]","frequency":15,"meaning":"明确的;清楚的"},
+{"word":"anniversary","phonetic":"[ˌænɪˈvɜːsəri]","frequency":13,"meaning":"周年纪念(日)"},
+{"word":"approach","phonetic":"[əˈprəʊtʃ]","frequency":12,"meaning":"v.靠近n.途径"},
+{"word":"depict","phonetic":"[dɪˈpɪkt]","frequency":15,"meaning":"描绘"},
+{"word":"evolution","phonetic":"[ˌiːvəˈluːʃn]","frequency":11,"meaning":"演变;进化"},
+{"word":"overcome","phonetic":"[ˌəʊvəˈkʌm]","frequency":10,"meaning":"克服;压倒"},
+{"word":"vigorous","phonetic":"[ˈvɪɡərəs]","frequency":12,"meaning":"精力充沛的"},
+{"word":"recreation","phonetic":"[ˌriːkriˈeɪʃn]","frequency":5,"meaning":"娱乐活动;消遣"},
+{"word":"stable","phonetic":"[ˈsteɪbl]","frequency":8,"meaning":"稳定的n.马厩"},
+{"word":"framework","phonetic":"[ˈfreɪmwɜːk]","frequency":5,"meaning":"框架;体系;结构"},
+{"word":"brochure","phonetic":"[ˈbrəʊʃə(r)]","frequency":4,"meaning":"小册子"},
+{"word":"consequent","phonetic":"[ˈkɒnsɪkwənt]","frequency":6,"meaning":"作为结果的"},
+{"word":"occupy","phonetic":"[ˈɒkjupaɪ]","frequency":11,"meaning":"占用;占领"},
+{"word":"profile","phonetic":"[ˈprəʊfaɪl]","frequency":29,"meaning":"轮廓v.为...描绘"},
+{"word":"compose","phonetic":"[kəmˈpəʊz]","frequency":9,"meaning":"构成;创作"},
+{"word":"compulsory","phonetic":"[kəmˈpʌlsəri]","frequency":5,"meaning":"强制的;必修的"},
+{"word":"personnel","phonetic":"[ˌpɜːsəˈnel]","frequency":15,"meaning":"全体人员"},
+{"word":"complicated","phonetic":"[ˈkɒmplɪkeɪtɪd]","frequency":8,"meaning":"复杂的"},
+{"word":"dioxide","phonetic":"[daɪˈɒksaɪd]","frequency":6,"meaning":"二氧化物"},
+{"word":"nuisance","phonetic":"[ˈnjuːsns]","frequency":7,"meaning":"讨厌的人(或事物)"},
+{"word":"toxic","phonetic":"[ˈtɒksɪk]","frequency":5,"meaning":"有毒的"},
+{"word":"offend","phonetic":"[əˈfend]","frequency":7,"meaning":"冒犯;使厌恶"},
+{"word":"retrieve","phonetic":"[rɪˈtriːv]","frequency":17,"meaning":"重新得到;恢复"},
+{"word":"inject","phonetic":"[ɪnˈdʒekt]","frequency":12,"meaning":"注射;注入"},
+{"word":"designate","phonetic":"[ˈdezɪgneɪt]","frequency":16,"meaning":"指派;标出"},
+{"word":"vacuum","phonetic":"[ˈvækjuːm]","frequency":15,"meaning":"n.真空v.用吸尘器清扫"},
+{"word":"polish","phonetic":"[ˈpɒlɪʃ]","frequency":10,"meaning":"v.抛光;润色n.擦光剂"},
+{"word":"eligible","phonetic":"[ˈelɪdʒəbl]","frequency":7,"meaning":"有资格的;合格的"},
+{"word":"antique","phonetic":"[ænˈtiːk]","frequency":8,"meaning":"古老的n.古董"},
+{"word":"memorial","phonetic":"[məˈmɔːriəl]","frequency":6,"meaning":"纪念的n.纪念碑"},
+{"word":"pedal","phonetic":"[ˈpedl]","frequency":6,"meaning":"n.踏板v.踩踏板;骑自行车"},
+{"word":"hazard","phonetic":"[ˈhæzəd]","frequency":5,"meaning":"n.危险v.尝试着做"},
+{"word":"prophet","phonetic":"[ˈprɒfɪt]","frequency":7,"meaning":"先知;预言家"},
+{"word":"sacred","phonetic":"[ˈseɪkrɪd]","frequency":8,"meaning":"神圣的;宗教(性)的"},
+{"word":"salute","phonetic":"[səˈluːt]","frequency":8,"meaning":"v.向...敬礼;赞扬;敬礼"},
+{"word":"proceed","phonetic":"[prəˈsiːd]","frequency":7,"meaning":"进行;行进"},
+{"word":"slump","phonetic":"[slʌmp]","frequency":5,"meaning":"v.暴跌n.低潮"},
+{"word":"thrive","phonetic":"[θraɪv]","frequency":15,"meaning":"兴旺,繁荣"},
+{"word":"esteem","phonetic":"[ɪˈstiːm]","frequency":16,"meaning":"n./v.尊重"},
+{"word":"currency","phonetic":"[ˈkʌrənsi]","frequency":10,"meaning":"货币;通行"},
+{"word":"exert","phonetic":"[ɪgˈzɜːt]","frequency":9,"meaning":"运用;努力"},
+{"word":"oriental","phonetic":"[ˌɔːriˈentl]","frequency":8,"meaning":"东方的;东方文化的"},
+{"word":"ignorance","phonetic":"[ˈɪgnərəns]","frequency":5,"meaning":"无知"},
+{"word":"kidney","phonetic":"[ˈkɪdni]","frequency":6,"meaning":"肾"},
+{"word":"vain","phonetic":"[veɪn]","frequency":5,"meaning":"徒劳的;自负的"},
+{"word":"violate","phonetic":"[ˈvaɪəleɪt]","frequency":5,"meaning":"违反;亵渎;侵犯"},
+{"word":"cancel","phonetic":"[ˈkænsl]","frequency":11,"meaning":"取消;抵消;划掉"},
+{"word":"divorce","phonetic":"[dɪˈvɔːs]","frequency":10,"meaning":"v.离婚;分离"},
+{"word":"accord","phonetic":"[əˈkɔːd]","frequency":7,"meaning":"n.一致;协议v.授予"},
+{"word":"bribe","phonetic":"[braɪb]","frequency":10,"meaning":"贿赂"},
+{"word":"economy","phonetic":"[ɪˈkɒnəmi]","frequency":8,"meaning":"经济;节约"},
+{"word":"identification","phonetic":"[aɪˌdentɪfɪˈkeɪʃn]","frequency":9,"meaning":"身份证明"},
+{"word":"ability","phonetic":"[əˈbɪləti]","frequency":11,"meaning":"能力;才能"},
+{"word":"brief","phonetic":"[briːf]","frequency":10,"meaning":"adj.短暂的;简短的n.摘要"},
+{"word":"conserve","phonetic":"[kənˈsɜːv]","frequency":26,"meaning":"保护;保存"},
+{"word":"fraction","phonetic":"[ˈfrækʃn]","frequency":15,"meaning":"小部分;分数"},
+{"word":"slash","phonetic":"[slæʃ]","frequency":12,"meaning":"v.砍;大幅度削减n.砍"},
+{"word":"bonus","phonetic":"[ˈbəʊnəs]","frequency":13,"meaning":"奖金"},
+{"word":"annual","phonetic":"[ˈænjuəl]","frequency":14,"meaning":"adj.每年的n.年报"},
+{"word":"metric","phonetic":"[ˈmetrɪk]","frequency":28,"meaning":"公制的;米制的"},
+{"word":"profitable","phonetic":"[ˈprɒfɪtəbl]","frequency":11,"meaning":"有利可图的"},
+{"word":"precise","phonetic":"[prɪˈsaɪs]","frequency":15,"meaning":"精确的;严谨的"},
+{"word":"notorious","phonetic":"[nəʊˈtɔːriəs]","frequency":4,"meaning":"臭名昭著的"},
+{"word":"residential","phonetic":"[ˌrezɪˈdenʃl]","frequency":21,"meaning":"居住的;住宅的"},
+{"word":"conventional","phonetic":"[kənˈvenʃənl]","frequency":11,"meaning":"常规的"},
+{"word":"subsidy","phonetic":"[ˈsʌbsədi]","frequency":38,"meaning":"补助金;津贴"},
+{"word":"tub","phonetic":"[tʌb]","frequency":19,"meaning":"桶;盆;浴缸"},
+{"word":"giant","phonetic":"[ˈdʒaɪənt]","frequency":16,"meaning":"n.巨人adj.巨大的"},
+{"word":"furnace","phonetic":"[ˈfɜːnɪs]","frequency":11,"meaning":"火炉"},
+{"word":"initial","phonetic":"[ɪˈnɪʃl]","frequency":12,"meaning":"开始的n.首字母"},
+{"word":"incentive","phonetic":"[ɪnˈsentɪv]","frequency":15,"meaning":"刺激;鼓励"},
+{"word":"sacrifice","phonetic":"[ˈsækrɪfaɪs]","frequency":22,"meaning":"n.牺牲;祭品;献祭"},
+{"word":"convert","phonetic":"[kənˈvɜːt]","frequency":53,"meaning":"(使)转变"},
+{"word":"portion","phonetic":"[ˈpɔːʃn]","frequency":23,"meaning":"一部分v.分配"},
+{"word":"lounge","phonetic":"[laʊndʒ]","frequency":24,"meaning":"n.休息厅v.闲逛"},
+{"word":"cozy","phonetic":"[ˈkəʊzi]","frequency":17,"meaning":"舒适的;亲切友好的"},
+{"word":"scratch","phonetic":"[skrætʃ]","frequency":16,"meaning":"v.抓;刮擦n.抓痕"},
+{"word":"relieve","phonetic":"[rɪˈliːv]","frequency":12,"meaning":"使轻松;减轻"},
+{"word":"precaution","phonetic":"[prɪˈkɔːʃn]","frequency":23,"meaning":"预防;警惕"},
+{"word":"permanent","phonetic":"[ˈpɜːmənənt]","frequency":26,"meaning":"永久的;固定的"},
+{"word":"exaggerate","phonetic":"[ɪgˈzædʒəreɪt]","frequency":22,"meaning":"夸大;夸张"},
+{"word":"remedy","phonetic":"[ˈremədi]","frequency":31,"meaning":"n.补救方法v.补救"},
+{"word":"defy","phonetic":"[dɪˈfaɪ]","frequency":23,"meaning":"违抗;藐视"},
+{"word":"routine","phonetic":"[ruːˈtiːn]","frequency":15,"meaning":"n.例行公事adj.例行的"},
+{"word":"fake","phonetic":"[feɪk]","frequency":36,"meaning":"n.假货;骗子adj.假的"},
+{"word":"instruct","phonetic":"[ɪnˈstrʌkt]","frequency":26,"meaning":"指示;教育"},
+{"word":"occasional","phonetic":"[əˈkeɪʒənl]","frequency":9,"meaning":"偶尔的"},
+{"word":"challenge","phonetic":"[ˈtʃælɪndʒ]","frequency":11,"meaning":"n./v.挑战"},
+{"word":"equip","phonetic":"[ɪˈkwɪp]","frequency":12,"meaning":"装备;使有准备"},
+{"word":"initiate","phonetic":"[ɪˈnɪʃieɪt/ɪˈnɪʃiət]","frequency":17,"meaning":"v.开始实施;发起n.新加入组织的人"},
+{"word":"occupation","phonetic":"[ˌɒkjuˈpeɪʃn]","frequency":8,"meaning":"职业;消遣"},
+{"word":"suspect","phonetic":"[səˈspekt]","frequency":8,"meaning":"v.推测n.可疑分子"},
+{"word":"patience","phonetic":"[ˈpeɪʃns]","frequency":18,"meaning":"耐心"},
+{"word":"endure","phonetic":"[ɪnˈdjʊə(r)]","frequency":17,"meaning":"忍受;忍耐"},
+{"word":"gap","phonetic":"[gæp]","frequency":26,"meaning":"缺口;差距;不足"},
+{"word":"cheat","phonetic":"[tʃiːt]","frequency":27,"meaning":"v.欺骗n.欺骗;骗子"},
+{"word":"abundant","phonetic":"[əˈbʌndənt]","frequency":29,"meaning":"(in)大量的"},
+{"word":"gaze","phonetic":"[geɪz]","frequency":21,"meaning":"v./n.注视"},
+{"word":"ideal","phonetic":"[aɪˈdiːəl]","frequency":56,"meaning":"adj.理想的n.理想"},
+{"word":"jealous","phonetic":"[ˈdʒeləs]","frequency":15,"meaning":"妒忌的;精心守护的"},
+{"word":"payment","phonetic":"[ˈpeɪmənt]","frequency":32,"meaning":"支付的款项;支付"},
+{"word":"revolve","phonetic":"[rɪˈvɒlv]","frequency":28,"meaning":"旋转"},
+{"word":"sanction","phonetic":"[ˈsæŋkʃn]","frequency":14,"meaning":"v./n.批准v.处罚"},
+{"word":"respectively","phonetic":"[rɪˈspektɪvli]","frequency":10,"meaning":"分别地"},
+{"word":"satisfactory","phonetic":"[ˌsætɪsˈfæktəri]","frequency":9,"meaning":"令人满意的"},
+{"word":"skeptical","phonetic":"[ˈskeptɪkl]","frequency":12,"meaning":"表示怀疑的"},
+{"word":"boost","phonetic":"[buːst]","frequency":16,"meaning":"提高;推动"},
+{"word":"household","phonetic":"[ˈhaʊshəʊld]","frequency":10,"meaning":"家庭"},
+{"word":"appliance","phonetic":"[əˈplaɪəns]","frequency":18,"meaning":"电器;应用"},
+{"word":"generate","phonetic":"[ˈdʒenəreɪt]","frequency":22,"meaning":"产生;引发"},
+{"word":"drain","phonetic":"[dreɪn]","frequency":12,"meaning":"v.排走n.下水道;排水管"},
+{"word":"integral","phonetic":"[ˈɪntɪgrəl]","frequency":14,"meaning":"构成整体所必需的"},
+{"word":"bankrupt","phonetic":"[ˈbæŋkrʌpt]","frequency":14,"meaning":"adj.破产的n.破产者"},
+{"word":"compact","phonetic":"[kəmˈpækt]","frequency":21,"meaning":"紧凑的n.合同"},
+{"word":"immense","phonetic":"[ɪˈmens]","frequency":15,"meaning":"广大的;巨大的"},
+{"word":"consume","phonetic":"[kənˈsjuːm]","frequency":16,"meaning":"消耗;花费"},
+{"word":"sensitive","phonetic":"[ˈsensətɪv]","frequency":10,"meaning":"敏感的"},
+{"word":"haunt","phonetic":"[hɔːnt]","frequency":11,"meaning":"v.常出没于n.常去的地方"},
+{"word":"vanish","phonetic":"[ˈvænɪʃ]","frequency":16,"meaning":"消失;不复存在"},
+{"word":"complex","phonetic":"[ˈkɒmpleks]","frequency":10,"meaning":"复合的;复杂的"},
+{"word":"freight","phonetic":"[freɪt]","frequency":13,"meaning":"n.货物v.运送(货物)"},
+{"word":"insulate","phonetic":"[ˈɪnsjuleɪt]","frequency":13,"meaning":"使绝缘;隔离"},
+{"word":"implement","phonetic":"[ˈɪmplɪment]","frequency":12,"meaning":"使生效;实施"},
+{"word":"electrical","phonetic":"[ɪˈlektrɪkl]","frequency":17,"meaning":"电的"},
+{"word":"efficient","phonetic":"[ɪˈfɪʃnt]","frequency":16,"meaning":"效率高的"},
+{"word":"derive","phonetic":"[dɪˈraɪv]","frequency":19,"meaning":"得到"},
+{"word":"keen","phonetic":"[kiːn]","frequency":18,"meaning":"热衷的;着迷的"},
+{"word":"casual","phonetic":"[ˈkæʒuəl]","frequency":10,"meaning":"马虎的;非正式的"},
+{"word":"acquaintance","phonetic":"[əˈkweɪntəns]","frequency":8,"meaning":"熟人;认识"},
+{"word":"embarrass","phonetic":"[ɪmˈbærəs]","frequency":9,"meaning":"使尴尬"},
+{"word":"inferior","phonetic":"[ɪnˈfɪəriə(r)]","frequency":9,"meaning":"adj.劣等的;下级的n.下级"},
+{"word":"parade","phonetic":"[pəˈreɪd]","frequency":10,"meaning":"游行;检阅"},
+{"word":"donation","phonetic":"[dəʊˈneɪʃn]","frequency":18,"meaning":"捐赠"},
+{"word":"vague","phonetic":"[veɪg]","frequency":10,"meaning":"含糊的;模糊的"},
+{"word":"construct","phonetic":"[kənˈstrʌkt]","frequency":16,"meaning":"v.建筑n.建筑物"},
+{"word":"expose","phonetic":"[ɪkˈspəʊz]","frequency":21,"meaning":"暴露"},
+{"word":"betray","phonetic":"[bɪˈtreɪ]","frequency":24,"meaning":"背叛;泄露"},
+{"word":"embrace","phonetic":"[ɪmˈbreɪs]","frequency":13,"meaning":"v.拥抱;欣然接受"},
+{"word":"sample","phonetic":"[ˈsaːmpl]","frequency":12,"meaning":"样品"},
+{"word":"upset","phonetic":"[ˌʌpˈset]","frequency":11,"meaning":"v.使心烦意乱;打乱adj.沮丧的"},
+{"word":"decisive","phonetic":"[dɪˈsaɪsɪv]","frequency":15,"meaning":"决定性的"},
+{"word":"expansive","phonetic":"[ɪkˈspænsɪv]","frequency":8,"meaning":"广阔的"},
+{"word":"conscience","phonetic":"[ˈkɒnʃəns]","frequency":8,"meaning":"良心"},
+{"word":"exemplify","phonetic":"[ɪgˈzemplɪfaɪ]","frequency":9,"meaning":"是...的典型"},
+{"word":"sexual","phonetic":"[ˈsekʃuəl]","frequency":10,"meaning":"性的;性别的"},
+{"word":"manufacture","phonetic":"[ˌmænjuˈfæktʃə(r)]","frequency":8,"meaning":"v.捏造n.制造品"},
+{"word":"peculiar","phonetic":"[pɪˈkjuːliə(r)]","frequency":10,"meaning":"奇怪的"},
+{"word":"means","phonetic":"[miːnz]","frequency":18,"meaning":"方法"},
+{"word":"output","phonetic":"[ˈaʊtpʊt]","frequency":10,"meaning":"产量;输出"},
+{"word":"scope","phonetic":"[skəʊp]","frequency":11,"meaning":"范围;眼界"},
+{"word":"reward","phonetic":"[rɪˈwɔːd]","frequency":16,"meaning":"报答;奖赏;酬金"},
+{"word":"nurture","phonetic":"[nɜːtʃə(r)]","frequency":15,"meaning":"养育;培育"},
+{"word":"passion","phonetic":"[ˈpæʃn]","frequency":14,"meaning":"激情;酷爱"},
+{"word":"quest","phonetic":"[kwest]","frequency":15,"meaning":"寻求;探索"},
+{"word":"refrain","phonetic":"[rɪˈfreɪn]","frequency":12,"meaning":"vi.节制;抑制"},
+{"word":"concern","phonetic":"[kənˈsɜːn]","frequency":13,"meaning":"n.关心v.使担心"},
+{"word":"collection","phonetic":"[kəˈlekʃn]","frequency":15,"meaning":"收藏品;收集"},
+{"word":"correspondence","phonetic":"[ˌkɒrəˈspɒndəns]","frequency":5,"meaning":"通信;符合"},
+{"word":"sufficient","phonetic":"[səˈfɪʃnt]","frequency":12,"meaning":"足够的;充分的"},
+{"word":"illustrate","phonetic":"[ˈɪləstreɪt]","frequency":14,"meaning":"说明"},
+{"word":"abandon","phonetic":"[əˈbændən]","frequency":12,"meaning":"放弃;抛弃"},
+{"word":"miserable","phonetic":"[ˈmɪzrəbl]","frequency":13,"meaning":"痛苦的"},
+{"word":"trap","phonetic":"[træp]","frequency":12,"meaning":"n.陷阱;困境v.使中圈套"},
+{"word":"enclose","phonetic":"[ɪnˈkləʊz]","frequency":15,"meaning":"围住"},
+{"word":"amaze","phonetic":"[əˈmeɪz]","frequency":13,"meaning":"使惊奇"},
+{"word":"unfold","phonetic":"[ʌnˈfəʊld]","frequency":16,"meaning":"展开;显露"},
+{"word":"prime","phonetic":"[praɪm]","frequency":14,"meaning":"首要的;最好的"},
+{"word":"shift","phonetic":"[ʃɪft]","frequency":15,"meaning":"v.转移n.转变"},
+{"word":"disrupt","phonetic":"[dɪsˈrʌpt]","frequency":14,"meaning":"使中断;扰乱"},
+{"word":"graduate","phonetic":"[ˈgrædʒuət/ˈgrædʒuˌeɪt]","frequency":17,"meaning":"v.毕业n.毕业生"},
+{"word":"trend","phonetic":"[trend]","frequency":18,"meaning":"趋势;时尚"},
+{"word":"critical","phonetic":"[ˈkrɪtɪkl]","frequency":11,"meaning":"批评的;严重的"},
+{"word":"adequate","phonetic":"[ˈædɪkwət]","frequency":12,"meaning":"充足的;合格的"},
+{"word":"dread","phonetic":"[dred]","frequency":15,"meaning":"v./n.担忧;畏惧"},
+{"word":"artificial","phonetic":"[ˌaːtɪˈfɪʃl]","frequency":21,"meaning":"人造的;假的"},
+{"word":"inflation","phonetic":"[ɪnˈfleɪʃn]","frequency":15,"meaning":"通货膨胀;膨胀"},
+{"word":"adjust","phonetic":"[əˈdʒʌst]","frequency":16,"meaning":"调整;调节;适应"},
+{"word":"stem","phonetic":"[stem]","frequency":12,"meaning":"n.茎;词干v.阻止"},
+{"word":"misery","phonetic":"[ˈmɪzəri]","frequency":13,"meaning":"痛苦;不幸"},
+{"word":"multiply","phonetic":"[ˈmʌltɪplaɪ]","frequency":26,"meaning":"(使)增加;乘"},
+{"word":"liberate","phonetic":"[ˈlɪbəreɪt]","frequency":18,"meaning":"解放;释出"},
+{"word":"dip","phonetic":"[dɪp]","frequency":11,"meaning":"n.浸;蘸v.落下"},
+{"word":"segment","phonetic":"[ˈsegmənt]","frequency":11,"meaning":"n.部分;瓣v.分割"},
+{"word":"setback","phonetic":"[ˈsetbæk]","frequency":15,"meaning":"挫折;退步"},
+{"word":"imaginative","phonetic":"[ɪˈmædʒɪnətɪv]","frequency":10,"meaning":"富有想象力的"},
+{"word":"portray","phonetic":"[pɔːˈtreɪ]","frequency":12,"meaning":"描绘;表现;扮演"},
+{"word":"feast","phonetic":"[fiːst]","frequency":13,"meaning":"n.盛宴;节日v.宴饮"},
+{"word":"erase","phonetic":"[ɪˈreɪz]","frequency":17,"meaning":"擦掉;抹去;清除"},
+{"word":"administer","phonetic":"[ədˈmɪnɪstə(r)]","frequency":15,"meaning":"管理;实施"},
+{"word":"assurance","phonetic":"[əˈʃʊərəns]","frequency":11,"meaning":"信心;保证"},
+{"word":"scrutiny","phonetic":"[ˈskruːtəni]","frequency":12,"meaning":"详细检查;仔细观察"},
+{"word":"gleam","phonetic":"[gliːm]","frequency":15,"meaning":"v./n.闪烁;流露"},
+{"word":"surf","phonetic":"[sɜːf]","frequency":14,"meaning":"v.上网浏览信息n.激浪"},
+{"word":"generous","phonetic":"[ˈdʒenərəs]","frequency":13,"meaning":"慷慨的;大量的"},
+{"word":"optimistic","phonetic":"[ˌɒptɪˈmɪstɪk]","frequency":17,"meaning":"乐观的"},
+{"word":"impress","phonetic":"[ɪmˈpres]","frequency":12,"meaning":"使敬佩"},
+{"word":"sightseeing","phonetic":"[ˈsaɪtsiːɪŋ]","frequency":12,"meaning":"观光"},
+{"word":"champagne","phonetic":"[ʃæmˈpeɪn]","frequency":12,"meaning":"香槟酒"},
+{"word":"entertain","phonetic":"[ˌentəˈteɪn]","frequency":15,"meaning":"款待;给...娱乐"},
+{"word":"steer","phonetic":"[stɪə(r)]","frequency":16,"meaning":"驾驶;引导;掌(舵)"},
+{"word":"frustrate","phonetic":"[ˈfrʌstreɪt]","frequency":31,"meaning":"挫败;使受挫折"},
+{"word":"definition","phonetic":"[ˌdefɪˈnɪʃn]","frequency":17,"meaning":"定义;清晰(度)"},
+{"word":"attain","phonetic":"[əˈteɪn]","frequency":14,"meaning":"达到;获得"},
+{"word":"statement","phonetic":"[ˈsteɪtmənt]","frequency":13,"meaning":"声明;阐述"},
+{"word":"exceed","phonetic":"[ɪkˈsiːd]","frequency":16,"meaning":"超过"},
+{"word":"originate","phonetic":"[əˈrɪdʒɪneɪt]","frequency":6,"meaning":"起源于;创造"},
+{"word":"reservation","phonetic":"[ˌrezəˈveɪʃn]","frequency":21,"meaning":"预订;保留"},
+{"word":"obligation","phonetic":"[ˌɒblɪˈgeɪʃn]","frequency":23,"meaning":"义务;责任"},
+{"word":"resolution","phonetic":"[ˌrezəˈluːʃn]","frequency":19,"meaning":"决心;解决"},
+{"word":"discount","phonetic":"[ˈdɪskaʊnt]","frequency":21,"meaning":"n.折扣v.打折"},
+{"word":"comprehensive","phonetic":"[ˌkɒmprɪˈhensɪv]","frequency":13,"meaning":"全面的"},
+{"word":"anyhow","phonetic":"[ˈenihaʊ]","frequency":25,"meaning":"无论如何"},
+{"word":"instant","phonetic":"[ˈɪnstənt]","frequency":31,"meaning":"立即的n.瞬间"},
+{"word":"misfortune","phonetic":"[ˌmɪsˈfɔːtʃuːn]","frequency":14,"meaning":"不幸;逆境"},
+{"word":"extravagant","phonetic":"[ɪkˈstrævəgənt]","frequency":17,"meaning":"奢侈的"},
+{"word":"cling","phonetic":"[klɪŋ]","frequency":16,"meaning":"(to)黏着;依恋;坚持"},
+{"word":"complaint","phonetic":"[kəmˈpleɪnt]","frequency":28,"meaning":"抱怨;投诉"},
+{"word":"skim","phonetic":"[skɪm]","frequency":13,"meaning":"浏览;略读"},
+{"word":"dim","phonetic":"[dɪm]","frequency":27,"meaning":"昏暗的v.(使)变暗淡"},
+{"word":"collapse","phonetic":"[kəˈlæps]","frequency":26,"meaning":"倒坍;崩溃"},
+{"word":"federal","phonetic":"[ˈfedərəl]","frequency":13,"meaning":"联邦制的"},
+{"word":"aboard","phonetic":"[əˈbɔːd]","frequency":15,"meaning":"在(船、飞机、火车等)上"},
+{"word":"devise","phonetic":"[dɪˈvaɪz]","frequency":34,"meaning":"发明;设计"},
+{"word":"venture","phonetic":"[ˈventʃə(r)]","frequency":13,"meaning":"n.风险投资v.冒险"},
+{"word":"clip","phonetic":"[klɪp]","frequency":15,"meaning":"n.夹子;回形针v.夹住"},
+{"word":"stroke","phonetic":"[strəʊk]","frequency":13,"meaning":"中风;笔画;击球"},
+{"word":"combat","phonetic":"[ˈkɒmbæt]","frequency":18,"meaning":"战斗;斗争v.斗争"},
+{"word":"revenue","phonetic":"[ˈrevənjuː]","frequency":18,"meaning":"收入;税收"},
+{"word":"apart","phonetic":"[əˈpaːt]","frequency":13,"meaning":"adv.分开adj.分离的"},
+{"word":"repay","phonetic":"[rɪˈpeɪ]","frequency":17,"meaning":"归还;报答"},
+{"word":"bound","phonetic":"[baʊnd]","frequency":16,"meaning":"一定的;受约束的"},
+{"word":"embark","phonetic":"[ɪmˈbaːk]","frequency":6,"meaning":"从事;上船"},
+{"word":"corrupt","phonetic":"[kəˈrʌpt]","frequency":13,"meaning":"adj.腐败的v.使堕落"},
+{"word":"recipe","phonetic":"[ˈresəpi]","frequency":14,"meaning":"烹饪法;食谱;秘诀"},
+{"word":"disclose","phonetic":"[dɪsˈkləʊz]","frequency":7,"meaning":"透露"},
+{"word":"classic","phonetic":"[ˈklæsɪk]","frequency":19,"meaning":"经典的n.经典作品"},
+{"word":"provision","phonetic":"[prəˈvɪʒn]","frequency":25,"meaning":"供应;条款"},
+{"word":"industrialize","phonetic":"[ɪnˈdʌstriəlaɪz]","frequency":15,"meaning":"(使)工业化"},
+{"word":"proposal","phonetic":"[prəˈpəʊzl]","frequency":24,"meaning":"提议;求婚"},
+{"word":"flourish","phonetic":"[ˈflʌrɪʃ]","frequency":14,"meaning":"繁荣;兴旺;挥动"},
+{"word":"coordinate","phonetic":"[kəʊˈɔːdɪneɪt]","frequency":23,"meaning":"搭配adj.同等的"},
+{"word":"existence","phonetic":"[ɪgˈzɪstəns]","frequency":13,"meaning":"存在;生存"},
+{"word":"deem","phonetic":"[diːm]","frequency":18,"meaning":"认为;相信"},
+{"word":"merely","phonetic":"[ˈmɪəli]","frequency":13,"meaning":"仅仅;只不过"},
+{"word":"incredible","phonetic":"[ɪnˈkredəbl]","frequency":6,"meaning":"不可信的;难以置信的"},
+{"word":"conduct","phonetic":"[kənˈdʌkt]","frequency":18,"meaning":"进行;指挥n.举止"},
+{"word":"exotic","phonetic":"[ɪgˈzɒtɪk]","frequency":55,"meaning":"奇异的;异国的"},
+{"word":"orbit","phonetic":"[ˈɔːbɪt]","frequency":14,"meaning":"轨道v.绕道而行"},
+{"word":"fare","phonetic":"[feə(r)]","frequency":17,"meaning":"票价"},
+{"word":"conclude","phonetic":"[kənˈkluːd]","frequency":16,"meaning":"推断出;总结"},
+{"word":"tremendous","phonetic":"[trəˈmendəs]","frequency":14,"meaning":"巨大的"},
+{"word":"institution","phonetic":"[ˌɪnstɪˈtjuːʃn]","frequency":18,"meaning":"制度;习俗"},
+{"word":"rare","phonetic":"[reə(r)]","frequency":17,"meaning":"稀有的;珍贵的"},
+{"word":"compensation","phonetic":"[ˌkɒmpenˈseɪʃn]","frequency":18,"meaning":"赔偿"},
+{"word":"abroad","phonetic":"[əˈbrɔːd]","frequency":13,"meaning":"在国外"},
+{"word":"lag","phonetic":"[læg]","frequency":12,"meaning":"走得慢;滞后n.间隔"},
+{"word":"aware","phonetic":"[əˈweə(r)]","frequency":15,"meaning":"意识到的"},
+{"word":"grocery","phonetic":"[ˈgrəʊsəri]","frequency":11,"meaning":"食品杂货店;杂货"},
+{"word":"incident","phonetic":"[ˈɪnsɪdənt]","frequency":15,"meaning":"事件;小事情"},
+{"word":"concentrate","phonetic":"[ˈkɒnsntreɪt]","frequency":14,"meaning":"集中;浓缩"},
+{"word":"immune","phonetic":"[ɪˈmjuːn]","frequency":8,"meaning":"免疫的;不受影响的"},
+{"word":"susceptible","phonetic":"[səˈseptəbl]","frequency":5,"meaning":"易受影响的"},
+{"word":"infect","phonetic":"[ɪnˈfekt]","frequency":18,"meaning":"传染;影响"},
+{"word":"evidence","phonetic":"[ˈevɪdəns]","frequency":12,"meaning":"证据"},
+{"word":"regulate","phonetic":"[ˈregjuleɪt]","frequency":21,"meaning":"管理;调节"},
+{"word":"advanced","phonetic":"[ədˈvaːnst]","frequency":10,"meaning":"先进的;年迈的"},
+{"word":"effective","phonetic":"[ɪˈfektɪv]","frequency":16,"meaning":"有效的;实际的"},
+{"word":"attitude","phonetic":"[ˈætɪtjuːd]","frequency":16,"meaning":"态度;看法"},
+{"word":"grant","phonetic":"[graːnt]","frequency":11,"meaning":"拨款v.授予;同意"},
+{"word":"access","phonetic":"[ˈækses]","frequency":18,"meaning":"n.入口v.到达;进入"},
+{"word":"indifferent","phonetic":"[ɪnˈdɪfrənt]","frequency":17,"meaning":"漠不关心的"},
+{"word":"crush","phonetic":"[krʌʃ]","frequency":16,"meaning":"挤压;压坏;镇压"},
+{"word":"elementary","phonetic":"[ˌelɪˈmentri]","frequency":15,"meaning":"基本的;初级的"},
+{"word":"primary","phonetic":"[ˈpraɪməri]","frequency":9,"meaning":"首要的;最初的"},
+{"word":"curriculum","phonetic":"[kəˈrɪkjələm]","frequency":17,"meaning":"课程"},
+{"word":"capable","phonetic":"[ˈkeɪpəbl]","frequency":15,"meaning":"有能力的"},
+{"word":"outstanding","phonetic":"[aʊtˈstændɪŋ]","frequency":15,"meaning":"杰出的;显著的"},
+{"word":"statesman","phonetic":"[ˈsteɪtsmən]","frequency":18,"meaning":"政治家"},
+{"word":"harsh","phonetic":"[haːʃ]","frequency":38,"meaning":"严厉的;刺耳的"},
+{"word":"representative","phonetic":"[ˌreprɪˈzentətɪv]","frequency":16,"meaning":"n.代表adj.典型的"},
+{"word":"automation","phonetic":"[ˌɔːtəˈmeɪʃn]","frequency":11,"meaning":"自动化"},
+{"word":"application","phonetic":"[ˌæplɪˈkeɪʃn]","frequency":12,"meaning":"申请;应用"},
+{"word":"personality","phonetic":"[ˌpɜːsəˈnæləti]","frequency":14,"meaning":"个性;性格"},
+{"word":"tutor","phonetic":"[ˈtjuːtə(r)]","frequency":15,"meaning":"导师;家庭教师"},
+{"word":"formula","phonetic":"[ˈfɔːmjələ]","frequency":20,"meaning":"方案;公式;配方"},
+{"word":"spit","phonetic":"[spɪt]","frequency":13,"meaning":"v.吐唾沫;吐出n.唾液"},
+{"word":"relate","phonetic":"[rɪˈleɪt]","frequency":16,"meaning":"有关联;涉及"},
+{"word":"extreme","phonetic":"[ɪkˈstriːm]","frequency":14,"meaning":"极端的n.极端"},
+{"word":"abnormal","phonetic":"[æbˈnɔːml]","frequency":13,"meaning":"不正常的"},
+{"word":"electrician","phonetic":"[ɪˌlekˈtrɪʃn]","frequency":18,"meaning":"电工"},
+{"word":"fury","phonetic":"[ˈfjʊəri]","frequency":14,"meaning":"暴怒;猛烈"},
+{"word":"overhear","phonetic":"[ˌəʊvəˈhɪə(r)]","frequency":9,"meaning":"无意中听到;偷听到"},
+{"word":"paradise","phonetic":"[ˈpærədaɪs]","frequency":11,"meaning":"天堂;乐园"},
+{"word":"muscular","phonetic":"[mʌskjələ(r)]","frequency":14,"meaning":"肌肉的;强壮的"},
+{"word":"usage","phonetic":"[ˈjuːsɪdʒ]","frequency":15,"meaning":"使用;用法;惯用法"},
+{"word":"saturate","phonetic":"[ˈsætʃəreɪt]","frequency":6,"meaning":"使浸透;饱和"},
+{"word":"acknowledge","phonetic":"[əkˈnɒlɪdʒ]","frequency":11,"meaning":"承认;接受"},
+{"word":"imaginary","phonetic":"[ɪˈmædʒɪnəri]","frequency":15,"meaning":"想象中的;虚构的"},
+{"word":"approve","phonetic":"[əˈpruːv]","frequency":14,"meaning":"赞成;称许"},
+{"word":"verge","phonetic":"[vɜːdʒ]","frequency":16,"meaning":"边缘;界限;范围"},
+{"word":"reliable","phonetic":"[rɪˈlaɪəbl]","frequency":17,"meaning":"可信赖的;可靠的"},
+{"word":"accommodation","phonetic":"[əˌkɒməˈdeɪʃn]","frequency":6,"meaning":"住处;住宿"},
+{"word":"temporary","phonetic":"[ˈtemprəri]","frequency":13,"meaning":"暂时的;短暂的"},
+{"word":"participant","phonetic":"[pɑːˈtɪsɪpənt]","frequency":10,"meaning":"参与者"},
+{"word":"likelihood","phonetic":"[ˈlaɪklihʊd]","frequency":15,"meaning":"可能;可能性"},
+{"word":"register","phonetic":"[ˈredʒɪstə(r)]","frequency":16,"meaning":"n.登记本v.登记"},
+{"word":"affect","phonetic":"[əˈfekt]","frequency":21,"meaning":"影响;使感动"},
+{"word":"appetite","phonetic":"[ˈæpɪtaɪt]","frequency":14,"meaning":"胃口;食欲"},
+{"word":"suppress","phonetic":"[səˈpres]","frequency":13,"meaning":"镇压;抑制"},
+{"word":"destination","phonetic":"[ˌdestɪˈneɪʃn]","frequency":13,"meaning":"目的地"},
+{"word":"skip","phonetic":"[skɪp]","frequency":17,"meaning":"v.跳;略过n.蹦跳"},
+{"word":"intersection","phonetic":"[ˌɪntəˈsekʃn]","frequency":15,"meaning":"交叉;十字路口"},
+{"word":"deficit","phonetic":"[ˈdefɪsɪt]","frequency":58,"meaning":"赤字;亏损"},
+{"word":"consistent","phonetic":"[kənˈsɪstənt]","frequency":13,"meaning":"始终如一的"},
+{"word":"reveal","phonetic":"[rɪˈviːl]","frequency":16,"meaning":"揭露;展现"},
+{"word":"disorder","phonetic":"[dɪsˈɔːdə(r)]","frequency":17,"meaning":"混乱;失调"},
+{"word":"institute","phonetic":"[ˈɪnstɪtjuːt]","frequency":15,"meaning":"协会v.建立"},
+{"word":"alter","phonetic":"[ɔːltə(r)]","frequency":21,"meaning":"改变"},
+{"word":"disguise","phonetic":"[dɪsˈgaɪz]","frequency":12,"meaning":"掩盖n.伪装"},
+{"word":"instantaneous","phonetic":"[ˌɪnstənˈteɪniəs]","frequency":15,"meaning":"瞬间的"},
+{"word":"offensive","phonetic":"[əˈfensɪv]","frequency":16,"meaning":"冒犯的n.进攻"},
+{"word":"twist","phonetic":"[twɪst]","frequency":11,"meaning":"v.捻;搓;拧n.弯曲"},
+{"word":"desperate","phonetic":"[ˈdespərət]","frequency":8,"meaning":"不顾一切的;绝望的"},
+{"word":"understanding","phonetic":"[ˌʌndəˈstændɪŋ]","frequency":17,"meaning":"谅解;理解"},
+{"word":"neglect","phonetic":"[nɪˈglekt]","frequency":16,"meaning":"v./n.忽略;疏忽"},
+{"word":"interrupt","phonetic":"[ˌɪntəˈrʌpt]","frequency":14,"meaning":"打断;中止"},
+{"word":"timely","phonetic":"[ˈtaɪmli]","frequency":15,"meaning":"及时的"},
+{"word":"determination","phonetic":"[dɪˌtɜːmɪˈneɪʃn]","frequency":12,"meaning":"决心;确定"},
+{"word":"therapy","phonetic":"[ˈθerəpi]","frequency":10,"meaning":"治疗;疗法"},
+{"word":"handicap","phonetic":"[ˈhændikæp]","frequency":8,"meaning":"缺陷;障碍"},
+{"word":"glide","phonetic":"[glaɪd]","frequency":15,"meaning":"v./n.滑行;滑翔"},
+{"word":"invariably","phonetic":"[ɪnˈveəriəbli]","frequency":16,"meaning":"不变地"},
+{"word":"serial","phonetic":"[ˈsɪəriəl]","frequency":12,"meaning":"n.连续剧adj.连续的"},
+{"word":"shabby","phonetic":"[ˈʃæbi]","frequency":15,"meaning":"破旧的;衣衫褴褛的"},
+{"word":"gigantic","phonetic":"[dʒaɪˈgæntɪk]","frequency":18,"meaning":"巨大的;庞大的"},
+{"word":"invert","phonetic":"[ɪnˈvɜːt]","frequency":11,"meaning":"使反转;使颠倒"},
+{"word":"predict","phonetic":"[prɪˈdɪkt]","frequency":14,"meaning":"预言;预测"},
+{"word":"interview","phonetic":"[ˈɪntəvjuː]","frequency":15,"meaning":"n./v.会见;面试"},
+{"word":"overlook","phonetic":"[ˌəʊvəˈlʊk]","frequency":14,"meaning":"忽略;俯瞰"},
+{"word":"external","phonetic":"[ɪkˈstɜːnl]","frequency":24,"meaning":"外部的n.外面"},
+{"word":"contrary","phonetic":"[ˈkɒntrəri]","frequency":15,"meaning":"adj.相反的n.相反面"},
+{"word":"exclaim","phonetic":"[ɪkˈskleɪm]","frequency":17,"meaning":"呼喊;惊叫"},
+{"word":"prior","phonetic":"[ˈpraɪə(r)]","frequency":16,"meaning":"优先的;在前的"},
+{"word":"preference","phonetic":"[ˈprefrəns]","frequency":17,"meaning":"偏爱"},
+{"word":"bold","phonetic":"[bəʊld]","frequency":12,"meaning":"勇敢的;鲁莽的"},
+{"word":"mercy","phonetic":"[ˈmɜːsi]","frequency":15,"meaning":"仁慈;恩惠"},
+{"word":"circular","phonetic":"[ˈsɜːkjələ(r)]","frequency":16,"meaning":"圆形的;循环的"},
+{"word":"accustom","phonetic":"[əˈkʌstəm]","frequency":9,"meaning":"使习惯(于)"},
+{"word":"clarify","phonetic":"[ˈklærəfaɪ]","frequency":7,"meaning":"阐明;澄清"},
+{"word":"permission","phonetic":"[pəˈmɪʃn]","frequency":21,"meaning":"许可"},
+{"word":"illusion","phonetic":"[ɪˈluːʒn]","frequency":15,"meaning":"幻想;错觉"},
+{"word":"agreeable","phonetic":"[əˈgriːəbl]","frequency":11,"meaning":"令人愉快的;同意的"},
+{"word":"schedule","phonetic":"[ˈʃedjuːl]","frequency":12,"meaning":"n.日程安排v.安排"},
+{"word":"abstract","phonetic":"[ˈæbstrækt]","frequency":13,"meaning":"adj.抽象的n.摘要"},
+{"word":"scenario","phonetic":"[səˈnaːriəʊ]","frequency":3,"meaning":"设想"},
+
+{"word":"stimulus","phonetic":"[ˈstɪmjələs]","frequency":9,"meaning":"刺激物"},
+{"word":"antibiotic","phonetic":"[ˌæntibaɪˈɒtɪk]","frequency":25,"meaning":"adj.抗生的"},
+{"word":"hypothesis","phonetic":"[haɪˈpɒθəsɪs]","frequency":49,"meaning":"假说"},
+{"word":"prestige","phonetic":"[preˈstiːʒ]","frequency":13,"meaning":"声望;威信"},
+{"word":"glimpse","phonetic":"[glɪmps]","frequency":16,"meaning":"v.瞥见n.一瞥"},
+{"word":"detach","phonetic":"[dɪˈtætʃ]","frequency":6,"meaning":"脱离;拆卸"},
+{"word":"tenure","phonetic":"[ˈtenjə(r)]","frequency":4,"meaning":"保有;终身职位"},
+{"word":"resurrection","phonetic":"[ˌrezəˈrekʃn]","frequency":3,"meaning":"复活"},
+{"word":"predator","phonetic":"[ˈpredətə(r)]","frequency":12,"meaning":"掠夺者"},
+{"word":"evolutionary","phonetic":"[ˌiːvəˈluːʃənri]","frequency":12,"meaning":"进化的"},
+{"word":"rationality","phonetic":"[ˌræʃə'nælətɪ]","frequency":12,"meaning":"合理性"},
+{"word":"retreat","phonetic":"[rɪˈtriːt]","frequency":22,"meaning":"v./n.撤退"},
+{"word":"leverage","phonetic":"[ˈliːvərɪdʒ]","frequency":4,"meaning":"杠杆"},
+{"word":"alleviate","phonetic":"[əˈliːvieɪt]","frequency":18,"meaning":"减轻;缓和"},
+{"word":"warehouse","phonetic":"[ˈweəhaʊs]","frequency":7,"meaning":"仓库"},
+{"word":"democracy","phonetic":"[dɪˈmɒkrəsi]","frequency":18,"meaning":"民主"},
+{"word":"intimidate","phonetic":"[ɪnˈtɪmɪdeɪt]","frequency":19,"meaning":"威胁;恐吓"},
+{"word":"spectacle","phonetic":"[ˈspektəkl]","frequency":7,"meaning":"景象;场面"},
+{"word":"hostile","phonetic":"[ˈhɒstaɪl]","frequency":20,"meaning":"敌意的;敌对的"},
+{"word":"compatible","phonetic":"[kəmˈpætəbl]","frequency":6,"meaning":"兼容的"},
+{"word":"reinforce","phonetic":"[ˌriːɪnˈfɔːs]","frequency":15,"meaning":"增强"},
+{"word":"notably","phonetic":"[ˈnəʊtəbli]","frequency":5,"meaning":"显著地;尤其"},
+{"word":"inventive","phonetic":"[ɪnˈventɪv]","frequency":4,"meaning":"有创造力的"},
+{"word":"subsidize","phonetic":"[ˈsʌbsɪdaɪz]","frequency":7,"meaning":"补助;给...发津贴"},
+{"word":"pesticide","phonetic":"[ˈpestɪsaɪd]","frequency":5,"meaning":"杀虫剂"},
+{"word":"justification","phonetic":"[ˌdʒʌstɪfɪˈkeɪʃn]","frequency":13,"meaning":"辩护"},
+{"word":"exhaustion","phonetic":"[ɪgˈzɔːstʃən]","frequency":8,"meaning":"耗尽"},
+{"word":"hurricane","phonetic":"[ˈhʌrɪkən]","frequency":5,"meaning":"飓风"},
+{"word":"inevitable","phonetic":"[ɪnˈevɪtəbl]","frequency":25,"meaning":"不可避免的"},
+{"word":"enrollment","phonetic":"[ɪnˈrəʊlmənt]","frequency":10,"meaning":"登记"},
+{"word":"retailer","phonetic":"[ˈriːteɪlə(r)]","frequency":56,"meaning":"零售商"},
+{"word":"expedition","phonetic":"[ˌekspəˈdɪʃn]","frequency":18,"meaning":"探险"},
+{"word":"stigma","phonetic":"[ˈstɪgmə]","frequency":4,"meaning":"耻辱;污名"},
+{"word":"controversial","phonetic":"[ˌkɒntrəˈvɜːʃl]","frequency":13,"meaning":"有争议的"},
+{"word":"ancestry","phonetic":"[ˈænsestri]","frequency":20,"meaning":"祖先"},
+{"word":"pledge","phonetic":"[pledʒ]","frequency":12,"meaning":"n./v.誓言;抵押"},
+{"word":"galactic","phonetic":"[gəˈlæktɪk]","frequency":9,"meaning":"银河的"},
+{"word":"tenant","phonetic":"[ˈtenənt]","frequency":4,"meaning":"租户"},
+{"word":"intensity","phonetic":"[ɪnˈtensəti]","frequency":7,"meaning":"强度;剧烈"},
+{"word":"enforce","phonetic":"[ɪnˈfɔːs]","frequency":15,"meaning":"强制;执行"},
+{"word":"intensive","phonetic":"[ɪnˈtensɪv]","frequency":54,"meaning":"密集的"},
+{"word":"refuge","phonetic":"[ˈrefjuːdʒ]","frequency":10,"meaning":"避难所;庇护"},
+{"word":"fragment","phonetic":"[ˈfrægmənt]","frequency":7,"meaning":"碎片;片段"},
+{"word":"ferry","phonetic":"[ˈferi]","frequency":10,"meaning":"n.渡船v.摆渡"},
+{"word":"supervisor","phonetic":"[ˈsuːpəvaɪzə(r)]","frequency":23,"meaning":"主管"},
+{"word":"fixture","phonetic":"[ˈfɪkstʃə(r)]","frequency":30,"meaning":"固定物"},
+{"word":"commodity","phonetic":"[kəˈmɒdəti]","frequency":10,"meaning":"商品"},
+{"word":"resentment","phonetic":"[rɪˈzentmənt]","frequency":8,"meaning":"怨恨;愤恨"},
+{"word":"ultimate","phonetic":"[ˈʌltɪmət]","frequency":25,"meaning":"最后的n.最终"},
+{"word":"indulge","phonetic":"[ɪnˈdʌldʒ]","frequency":8,"meaning":"放任;沉溺"},
+{"word":"surpass","phonetic":"[səˈpaːs]","frequency":23,"meaning":"超过;胜任"},
+{"word":"millennium","phonetic":"[mɪˈleniəm]","frequency":4,"meaning":"一千年"},
+{"word":"constraint","phonetic":"[kənˈstreɪnt]","frequency":34,"meaning":"约束"},
+{"word":"attendant","phonetic":"[əˈtendənt]","frequency":16,"meaning":"n.服务员"},
+{"word":"supervision","phonetic":"[ˌsuːpəˈvɪʒn]","frequency":7,"meaning":"监督;管理"},
+{"word":"pyramid","phonetic":"[ˈpɪrəmɪd]","frequency":13,"meaning":"金字塔"},
+{"word":"robust","phonetic":"[rəʊˈbʌst]","frequency":6,"meaning":"强壮的"},
+{"word":"irrational","phonetic":"[ɪˈræʃənl]","frequency":24,"meaning":"不合理的"},
+{"word":"cholesterol","phonetic":"[kəˈlestərɒl]","frequency":3,"meaning":"胆固醇"},
+{"word":"obsession","phonetic":"[əbˈseʃn]","frequency":4,"meaning":"痴迷;困扰"},
+{"word":"straightforward","phonetic":"[ˌstreɪtˈfɔːwəd]","frequency":3,"meaning":"坦率的"},
+{"word":"demographic","phonetic":"[ˌdeməˈgræfɪk]","frequency":6,"meaning":"人口的"},
+{"word":"carbohydrate","phonetic":"[ˌkaːbəʊˈhaɪdreɪt]","frequency":5,"meaning":"碳水化合物"},
+{"word":"scooter","phonetic":"[ˈskuːtə(r)]","frequency":9,"meaning":"滑板车;小摩托车"},
+{"word":"texture","phonetic":"[ˈtekstʃə(r)]","frequency":35,"meaning":"质地;构造"},
+{"word":"imminent","phonetic":"[ˈɪmɪnənt]","frequency":6,"meaning":"即将发生的"},
+{"word":"algorithm","phonetic":"[ˈælgərɪðəm]","frequency":17,"meaning":"算法"},
+{"word":"interpret","phonetic":"[ɪnˈtɜːprət]","frequency":25,"meaning":"口译;解释"},
+{"word":"trigger","phonetic":"[ˈtrɪgə(r)]","frequency":11,"meaning":"n.触发;诱因"},
+{"word":"celebrity","phonetic":"[səˈlebrəti]","frequency":34,"meaning":"名人;名声"},
+{"word":"democrat","phonetic":"[ˈdeməkræt]","frequency":16,"meaning":"民主主义者"},
+{"word":"speculate","phonetic":"[ˈspekjuleɪt]","frequency":6,"meaning":"推测;思索"},
+{"word":"chronic","phonetic":"[ˈkrɒnɪk]","frequency":24,"meaning":"慢性的"},
+{"word":"dedication","phonetic":"[ˌdedɪˈkeɪʃn]","frequency":7,"meaning":"献身;奉献"},
+{"word":"pasta","phonetic":"[ˈpæstə]","frequency":17,"meaning":"意大利面"},
+{"word":"endeavour","phonetic":"[ɪnˈdevə(r)]","frequency":30,"meaning":"n./v.尽力"},
+{"word":"contradict","phonetic":"[ˌkɒntrəˈdɪkt]","frequency":4,"meaning":"反驳;相矛盾"},
+{"word":"colonial","phonetic":"[kəˈləʊniəl]","frequency":12,"meaning":"殖民地的"},
+{"word":"outsource","phonetic":["aʊtsɔːs"],"frequency":34,"meaning":"外包"},
+{"word":"heritage","phonetic":"[ˈherɪtɪdʒ]","frequency":27,"meaning":"遗产;传统"},
+{"word":"formulate","phonetic":"[ˈfɔːmjuleɪt]","frequency":25,"meaning":"规划"},
+{"word":"ridiculous","phonetic":"[rɪˈdɪkjələs]","frequency":24,"meaning":"荒谬的"},
+{"word":"stunning","phonetic":"[ˈstʌnɪŋ]","frequency":11,"meaning":"令人震惊的"},
+{"word":"manipulate","phonetic":"[məˈnɪpjʊleɪt]","frequency":15,"meaning":"操纵"},
+{"word":"indigenous","phonetic":"[ɪnˈdɪdʒənəs]","frequency":13,"meaning":"本地的;本土的"},
+{"word":"threshold","phonetic":"[ˈθreʃhəʊld]","frequency":31,"meaning":"门槛"},
+{"word":"standpoint","phonetic":"[ˈstændpɔɪnt]","frequency":15,"meaning":"立场;观点"},
+{"word":"revive","phonetic":"[rɪˈvaɪv]","frequency":6,"meaning":"复活;再生"},
+{"word":"sewage","phonetic":"[ˈsuːɪdʒ]","frequency":8,"meaning":"污水;下水道"},
+{"word":"demonstrate","phonetic":"[ˈdemənstreɪt]","frequency":15,"meaning":"证明"},
+{"word":"imperative","phonetic":"[ɪmˈperətɪv]","frequency":17,"meaning":"急需的"},
+{"word":"passport","phonetic":"[ˈpaːspɔːt]","frequency":20,"meaning":"护照"},
+{"word":"irritated","phonetic":"[ˈɪrɪteɪtɪd]","frequency":33,"meaning":"愤怒的"},
+{"word":"nominate","phonetic":"[ˈnɒmɪneɪt]","frequency":5,"meaning":"提名;指派"},
+{"word":"outperform","phonetic":"[ˌaʊtpəˈfɔːm]","frequency":21,"meaning":"超过"},
+{"word":"irrelevant","phonetic":"[ɪˈreləvənt]","frequency":6,"meaning":"无关紧要的"},
+{"word":"debris","phonetic":"[ˈdebriː]","frequency":17,"meaning":"碎片;残骸"},
+{"word":"utterly","phonetic":"[ˈʌtəli]","frequency":16,"meaning":"完全地;绝对"},
+{"word":"trillion","phonetic":"[ˈtrɪljən]","frequency":6,"meaning":"兆;万亿"},
+{"word":"endorse","phonetic":"[ɪnˈdɔːs]","frequency":26,"meaning":"签署;支持"},
+{"word":"mindset","phonetic":"[ˈmaɪndset]","frequency":5,"meaning":"观念模式"},
+{"word":"memorandum","phonetic":"[ˌmeməˈrændəm]","frequency":11,"meaning":"备忘录"},
+{"word":"relentless","phonetic":"[rɪˈlentləs]","frequency":8,"meaning":"无情的;不懈的"},
+{"word":"extinction","phonetic":"[ɪkˈstɪŋkʃn]","frequency":17,"meaning":"灭绝"},
+{"word":"dwell","phonetic":"[dwel]","frequency":6,"meaning":"居住;沉湎于"},
+{"word":"conducive","phonetic":"[kənˈdjuːsɪv]","frequency":26,"meaning":"有利于...的"},
+{"word":"multitude","phonetic":"[ˈmʌltɪtjuːd]","frequency":21,"meaning":"大量;群众"},
+{"word":"dedicate","phonetic":"[ˈdedɪkeɪt]","frequency":28,"meaning":"奉献;致力"},
+{"word":"fabric","phonetic":"[ˈfæbrɪk]","frequency":12,"meaning":"织物;布料;结构"},
+{"word":"magnitude","phonetic":"[ˈmægnɪtjuːd]","frequency":10,"meaning":"重大"},
+{"word":"predominantly","phonetic":"[prɪˈdɒmɪnəntli]","frequency":10,"meaning":"主要地"},
+{"word":"privilege","phonetic":"[ˈprɪvəlɪdʒ]","frequency":23,"meaning":"特权;荣幸"},
+{"word":"fertilizer","phonetic":"[ˈfɜːtəlaɪzə(r)]","frequency":54,"meaning":"v.施肥;使肥沃"},
+{"word":"devastating","phonetic":"[ˈdevəsteɪtɪŋ]","frequency":22,"meaning":"毁灭性的"},
+{"word":"migration","phonetic":"[maɪˈgreɪʃn]","frequency":25,"meaning":"迁徙;移居"},
+{"word":"glamorous","phonetic":"[ˈglæmərəs]","frequency":11,"meaning":"迷人的"},
+{"word":"solitude","phonetic":"[ˈsɒlətjuːd]","frequency":14,"meaning":"孤独;独处"},
+{"word":"communal","phonetic":"[kəˈmjuːnl]","frequency":9,"meaning":"社区的"},
+{"word":"inferior","phonetic":"[ɪnˈfɪəriə(r)]","frequency":19,"meaning":"较差的;次等的"},
+{"word":"plague","phonetic":"[pleɪg]","frequency":4,"meaning":"n.瘟疫v.困扰"},
+{"word":"cumulative","phonetic":"[ˈkjuːmjəleɪtɪv]","frequency":14,"meaning":"累积的"},
+{"word":"withdraw","phonetic":"[wɪðˈdrɔː]","frequency":18,"meaning":"撤回;撤退"},
+{"word":"satellite","phonetic":"[ˈsætəlaɪt]","frequency":32,"meaning":"卫星"},
+{"word":"sentiment","phonetic":"[ˈsentɪmənt]","frequency":20,"meaning":"情绪;看法"},
+{"word":"strand","phonetic":"[strænd]","frequency":7,"meaning":"n.海滨v.使滞留"},
+{"word":"substitute","phonetic":"[ˈsʌbstɪtjuːt]","frequency":33,"meaning":"v.替代"},
+{"word":"prestigious","phonetic":"[preˈstɪdʒəs]","frequency":23,"meaning":"有声望的"},
+{"word":"prescription","phonetic":"[prɪˈskrɪpʃn]","frequency":10,"meaning":"处方药"},
+{"word":"bizarre","phonetic":"[bɪˈzaː(r)]","frequency":25,"meaning":"奇怪的;奇特的"},
+{"word":"parliament","phonetic":"[ˈpaːləmənt]","frequency":13,"meaning":"议会"},
+{"word":"momentum","phonetic":"[məˈmentəm]","frequency":58,"meaning":"动力"},
+{"word":"saturated","phonetic":"[ˈsætʃəreɪtɪd]","frequency":5,"meaning":"渗透的;充满的"},
+{"word":"legitimate","phonetic":"[lɪˈdʒɪtɪmət]","frequency":7,"meaning":"合理的v.使合法"},
+{"word":"handicapped","phonetic":"[ˈhændikæpt]","frequency":8,"meaning":"残疾的"},
+{"word":"masterpiece","phonetic":"[ˈmaːstəpiːs]","frequency":7,"meaning":"杰作"},
+{"word":"deliberate","phonetic":"[dɪˈlɪbərət]","frequency":7,"meaning":"adj.故意的v.深思"},
+{"word":"testimony","phonetic":"[ˈtestɪməni]","frequency":19,"meaning":"证明"},
+{"word":"gesture","phonetic":"[ˈdʒestʃə(r)]","frequency":13,"meaning":"n.手势"},
+{"word":"ingenuity","phonetic":"[ˌɪndʒəˈnjuːəti]","frequency":12,"meaning":"创造力"},
+{"word":"fluctuation","phonetic":"[ˌflʌktʃuˈeɪʃn]","frequency":7,"meaning":"波动;起伏"},
+{"word":"metropolitan","phonetic":"[ˌmetrəˈpɒlɪtən]","frequency":13,"meaning":"大城市的"},
+{"word":"satire","phonetic":"[ˈsætaɪə(r)]","frequency":7,"meaning":"讽刺;讽刺作品"},
+{"word":"tropical","phonetic":"[ˈtrɒpɪkl]","frequency":53,"meaning":"热带的"},
+{"word":"monopoly","phonetic":"[məˈnɒpəli]","frequency":8,"meaning":"垄断"},
+{"word":"simultaneously","phonetic":"[ˌsɪməlˈteɪniəsli]","frequency":4,"meaning":"同时地"},
+{"word":"resilient","phonetic":"[rɪˈzɪliənt]","frequency":7,"meaning":"有弹性的"},
+{"word":"intimacy","phonetic":"[ˈɪntɪməsi]","frequency":16,"meaning":"亲密"},
+{"word":"mineral","phonetic":"[ˈmɪnərəl]","frequency":20,"meaning":"矿物质"},
+{"word":"repository","phonetic":"[rɪˈpɒzətri]","frequency":6,"meaning":"仓库;存放处"},
+{"word":"underestimate","phonetic":"[ˌʌndərˈestɪmeɪt]","frequency":5,"meaning":"v./n.低估"},
+{"word":"monarch","phonetic":"[ˈmɒnək]","frequency":11,"meaning":"君王;帝王"},
+{"word":"milestone","phonetic":"[ˈmaɪlstəʊn]","frequency":20,"meaning":"重要事件"},
+{"word":"burnout","phonetic":"[ˈbɜːnaʊt]","frequency":6,"meaning":"精疲力竭"},
+{"word":"poetry","phonetic":"[ˈpəʊətri]","frequency":10,"meaning":"诗歌"},
+{"word":"thorough","phonetic":"[ˈθʌrə]","frequency":15,"meaning":"彻底的"},
+{"word":"cricket","phonetic":"[ˈkrɪkɪt]","frequency":8,"meaning":"板球;蟋蟀"},
+{"word":"deteriorate","phonetic":"[dɪˈtɪəriəreɪt]","frequency":25,"meaning":"恶化;变坏"},
+{"word":"deposit","phonetic":"[dɪˈpɒzɪt]","frequency":28,"meaning":"n.存款;押金"},
+{"word":"sustain","phonetic":"[səˈsteɪn]","frequency":22,"meaning":"承受;维持"},
+{"word":"manifest","phonetic":"[ˈmænɪfest]","frequency":6,"meaning":"adj.明显的v.表明"},
+{"word":"migrant","phonetic":"[ˈmaɪgrənt]","frequency":9,"meaning":"移居者"},
+{"word":"immigration","phonetic":"[ˌɪmɪˈgreɪʃn]","frequency":25,"meaning":"移民"},
+{"word":"intuitive","phonetic":"[ɪnˈtjuːɪtɪv]","frequency":27,"meaning":"直觉的"},
+{"word":"adversely","phonetic":"[ˈædvɜːsli]","frequency":4,"meaning":"不利地"},
+{"word":"craftsmanship","phonetic":"[ˈkraːftsmənʃɪp]","frequency":21,"meaning":"技艺"},
+{"word":"subsistence","phonetic":"[səbˈsɪstəns]","frequency":13,"meaning":"生存"},
+{"word":"charming","phonetic":"[ˈtʃaːmɪŋ]","frequency":24,"meaning":"迷人的"},
+{"word":"syndrome","phonetic":"[ˈsɪndrəʊm]","frequency":17,"meaning":"综合症"},
+{"word":"chunk","phonetic":"[tʃʌŋk]","frequency":6,"meaning":"厚块;大块"},
+{"word":"prolong","phonetic":"[prəˈlɒŋ]","frequency":7,"meaning":"拉长;延长"},
+{"word":"compensate","phonetic":"[ˈkɒmpenseɪt]","frequency":24,"meaning":"补偿"},
+{"word":"elite","phonetic":"[eɪˈliːt]","frequency":58,"meaning":"n.精英adj.精英的"},
+{"word":"spectacular","phonetic":"[spekˈtækjələ(r)]","frequency":19,"meaning":"壮观的"},
+{"word":"delicate","phonetic":"[ˈdelɪkət]","frequency":12,"meaning":"脆弱的;精致的"},
+{"word":"hazardous","phonetic":"[ˈhæzədəs]","frequency":5,"meaning":"危险的"},
+{"word":"moderate","phonetic":"[ˈmɒdərət]","frequency":8,"meaning":"adj.适度的v.节制"},
+{"word":"catastrophic","phonetic":"[ˌkætəˈstrɒfɪk]","frequency":19,"meaning":"灾难性的"},
+{"word":"glamour","phonetic":"[ˈglæmə(r)]","frequency":13,"meaning":"魅力;魔力"},
+{"word":"presumably","phonetic":"[prɪˈzjuːməbli]","frequency":22,"meaning":"大概"},
+{"word":"amateur","phonetic":"[ˈæmətə(r)]","frequency":42,"meaning":"adj.业余的n.业余爱好者"},
+{"word":"mentality","phonetic":"[menˈtæləti]","frequency":8,"meaning":"智力;心理"},
+{"word":"submission","phonetic":"[səbˈmɪʃn]","frequency":4,"meaning":"屈从;提交"},
+{"word":"violation","phonetic":"[ˌvaɪə'leɪʃ(ə)n]","frequency":5,"meaning":"违反;妨碍"},
+{"word":"collision","phonetic":"[kəˈlɪʒn]","frequency":6,"meaning":"冲突;碰撞"},
+{"word":"payroll","phonetic":"[ˈpeɪrəʊl]","frequency":26,"meaning":"工资册"},
+{"word":"underlie","phonetic":"[ˌʌndəˈlaɪ]","frequency":17,"meaning":"构成...的基础"},
+{"word":"relocate","phonetic":"[ˌriːləʊˈkeɪt]","frequency":15,"meaning":"重新安置"},
+{"word":"invisible","phonetic":"[ɪnˈvɪzəbl]","frequency":31,"meaning":"看不见的"},
+{"word":"tactic","phonetic":"[ˈtæktɪk]","frequency":16,"meaning":"n.战略;策略"},
+{"word":"transparent","phonetic":"[trænsˈpærənt]","frequency":10,"meaning":"显然的"},
+{"word":"subtle","phonetic":"[ˈsʌtl]","frequency":25,"meaning":"隐晦的"},
+{"word":"paralyzed","phonetic":"[ˈpærəlaɪzd]","frequency":4,"meaning":"瘫痪的;麻木的"},
+{"word":"resilience","phonetic":"[rɪˈzɪliəns]","frequency":8,"meaning":"适应力"},
+{"word":"tedious","phonetic":"[ˈtiːdiəs]","frequency":4,"meaning":"冗长的;乏味的"},
+{"word":"fertility","phonetic":"[fəˈtɪləti]","frequency":12,"meaning":"肥沃;繁殖力"},
+{"word":"transcend","phonetic":"[trænˈsend]","frequency":5,"meaning":"超越;超出"},
+{"word":"verify","phonetic":"[ˈverɪfaɪ]","frequency":7,"meaning":"证实;核实"},
+{"word":"sanctuary","phonetic":"[ˈsæŋktʃuəri]","frequency":51,"meaning":"避难所"},
+{"word":"municipal","phonetic":"[mjuːˈnɪsɪpl]","frequency":19,"meaning":"市政的"},
+{"word":"descendant","phonetic":"[dɪˈsendənt]","frequency":5,"meaning":"子孙后代"},
+{"word":"deplete","phonetic":"[dɪˈpliːt]","frequency":32,"meaning":"耗尽"},
+{"word":"summit","phonetic":"[ˈsʌmɪt]","frequency":15,"meaning":"顶点;首脑会议"},
+{"word":"tsunami","phonetic":"[tsuːˈnaːmi]","frequency":12,"meaning":"海啸"},
+{"word":"controversy","phonetic":"[ˈkɒntrəvɜːsi]","frequency":38,"meaning":"争论"},
+{"word":"submit","phonetic":"[səbˈmɪt]","frequency":5,"meaning":"提交"},
+{"word":"available","phonetic":"[əˈveɪləbl]","frequency":13,"meaning":"可用的;有空的"},
+{"word":"tuition","phonetic":"[tjuˈɪʃn]","frequency":4,"meaning":"学费;教学"},
+{"word":"collaborative","phonetic":"[kəˈlæbərətɪv]","frequency":7,"meaning":"合作的"},
+{"word":"indispensable","phonetic":"[ˌɪndɪˈspensəbl]","frequency":4,"meaning":"不可或缺的"},
+{"word":"groundless","phonetic":"[ˈgraʊndləs]","frequency":5,"meaning":"无理由的"},
+{"word":"vocal","phonetic":"[ˈvəʊkl]","frequency":3,"meaning":"直言的"},
+{"word":"radical","phonetic":"[ˈrædɪkl]","frequency":8,"meaning":"激进的"},
+{"word":"potential","phonetic":"[pəˈtenʃl]","frequency":16,"meaning":"adj.可能的;潜在的n.可能性;潜力"},
+{"word":"enable","phonetic":"[ɪˈneɪbl]","frequency":17,"meaning":"使能够;使可能"},
+{"word":"diversity","phonetic":"[daɪˈvɜːsəti]","frequency":5,"meaning":"不同;差异"},
+{"word":"mutual","phonetic":"[ˈmjuːtʃuəl]","frequency":6,"meaning":"相互的"},
+{"word":"novel","phonetic":"[ˈnɒvl]","frequency":8,"meaning":"新颖的;新奇的"},
+{"word":"variety","phonetic":"[vəˈraɪəti]","frequency":29,"meaning":"各式各样"},
+{"word":"claim","phonetic":"[kleɪm]","frequency":9,"meaning":"宣言;断言"},
+{"word":"resident","phonetic":"[ˈrezɪdənt]","frequency":16,"meaning":"居民"},
+{"word":"associate","phonetic":"[əˈsəʊsieɪt]","frequency":14,"meaning":"v.联系"},
+{"word":"academic","phonetic":"[ˌækəˈdemɪk]","frequency":26,"meaning":"学术的"},
+{"word":"brand","phonetic":"[brænd]","frequency":10,"meaning":"品牌"},
+{"word":"occur","phonetic":"[əˈkɜː(r)]","frequency":24,"meaning":"发生"},
+{"word":"implication","phonetic":"[ˌɪmplɪˈkeɪʃn]","frequency":15,"meaning":"暗指;暗示"},
+{"word":"stress","phonetic":"[stres]","frequency":9,"meaning":"n.紧张;重音v.强调"},
+{"word":"allergic","phonetic":"[əˈlɜːdʒɪk]","frequency":4,"meaning":"过敏的;对...极其反感的"},
+{"word":"bias","phonetic":"[ˈbaɪəs]","frequency":5,"meaning":"偏见"},
+{"word":"political","phonetic":"[pəˈlɪtɪkl]","frequency":7,"meaning":"政治的"},
+{"word":"burden","phonetic":"[ˈbɜːdn]","frequency":7,"meaning":"负担;重担"},
+{"word":"virtually","phonetic":"[ˈvɜːtʃuəli]","frequency":8,"meaning":"几乎;实际上"},
+{"word":"reproductive","phonetic":"[ˌriːprəˈdʌktɪv]","frequency":4,"meaning":"繁殖的;复制的"},
+{"word":"expectancy","phonetic":"[ɪkˈspektənsi]","frequency":5,"meaning":"期待"},
+{"word":"avoid","phonetic":"[əˈvɔɪd]","frequency":29,"meaning":"回避;避免"},
+{"word":"platform","phonetic":"[ˈplætfɔːm]","frequency":5,"meaning":"平台"},
+{"word":"convey","phonetic":"[kənˈveɪ]","frequency":6,"meaning":"表达;传递"},
+{"word":"fraud","phonetic":"[frɔːd]","frequency":3,"meaning":"欺诈;骗子"},
+{"word":"apply","phonetic":"[əˈplaɪ]","frequency":15,"meaning":"应用;申请;适用;涂"},
+{"word":"complement","phonetic":"[ˈkɒmplɪment]","frequency":3,"meaning":"v.补充"},
+{"word":"severe","phonetic":"[sɪˈvɪə(r)]","frequency":7,"meaning":"艰难的;严厉的"},
+{"word":"preservation","phonetic":"[ˌprezəˈveɪʃn]","frequency":8,"meaning":"维护;保存"},
+{"word":"overwhelming","phonetic":"[ˌəʊvəˈwelmɪŋ]","frequency":8,"meaning":"巨大的"},
+{"word":"attractive","phonetic":"[əˈtræktɪv]","frequency":8,"meaning":"迷人的"},
+{"word":"technique","phonetic":"[tekˈniːk]","frequency":6,"meaning":"技能;技术"},
+{"word":"fade","phonetic":"[feɪd]","frequency":5,"meaning":"逐渐消失;变得脆弱"},
+{"word":"characteristic","phonetic":"[ˌkærəktəˈrɪstɪk]","frequency":10,"meaning":"特征"},
+{"word":"commitment","phonetic":"[kəˈmɪtmənt]","frequency":7,"meaning":"承诺;保证"},
+{"word":"campus","phonetic":"[ˈkæmpəs]","frequency":9,"meaning":"校园;校区"},
+{"word":"reform","phonetic":"[rɪˈfɔːm]","frequency":9,"meaning":"改革;变革;改良"},
+{"word":"yield","phonetic":"[jiːld]","frequency":12,"meaning":"n.产量;产出"},
+{"word":"treatment","phonetic":"[ˈtriːtmənt]","frequency":12,"meaning":"疗法;治疗"},
+{"word":"assumption","phonetic":"[əˈsʌmpʃn]","frequency":15,"meaning":"假定;设定"},
+{"word":"export","phonetic":"[ˈekspɔːt]","frequency":8,"meaning":"n.出口(物)v.出口[ɪkˈspɔːt]"},
+{"word":"diet","phonetic":"[ˈdaɪət]","frequency":42,"meaning":"饮食;节食"},
+{"word":"promote","phonetic":"[prəˈməʊt]","frequency":26,"meaning":"促进;提升;推广"},
+{"word":"corporate","phonetic":"[ˈkɔːpərət]","frequency":4,"meaning":"公司的"},
+{"word":"consult","phonetic":"[kənˈsʌlt]","frequency":4,"meaning":"请教;查阅"},
+{"word":"award","phonetic":"[əˈwɔːd]","frequency":5,"meaning":"n.奖;薪水v.授予;奖励"},
+{"word":"survive","phonetic":"[səˈvaɪv]","frequency":18,"meaning":"生存;比...活得久"},
+{"word":"admit","phonetic":"[ədˈmɪt]","frequency":7,"meaning":"赞同;准许...进入"},
+{"word":"analysis","phonetic":"[əˈnæləsɪs]","frequency":7,"meaning":"分析"},
+{"word":"insight","phonetic":"[ˈɪnsaɪt]","frequency":7,"meaning":"洞察力;眼光"},
+{"word":"association","phonetic":"[əˌsəʊsiˈeɪʃn]","frequency":15,"meaning":"协会;联盟"},
+{"word":"inquiry","phonetic":"[ɪnˈkwaɪəri]","frequency":10,"meaning":"调查"},
+{"word":"refuse","phonetic":"[rɪˈfjuːz]","frequency":24,"meaning":"拒绝"},
+{"word":"software","phonetic":"[ˈsɒftweə(r)]","frequency":15,"meaning":"软件"},
+{"word":"scholar","phonetic":"[ˈskɒlə(r)]","frequency":7,"meaning":"学者"},
+{"word":"route","phonetic":"[ruːt]","frequency":15,"meaning":"路线;途径"},
+{"word":"command","phonetic":"[kəˈmaːnd]","frequency":4,"meaning":"n.命令;指令"},
+{"word":"psychological","phonetic":"[ˌsaɪkəˈlɒdʒɪkl]","frequency":11,"meaning":"心理的"},
+{"word":"escape","phonetic":"[ɪˈskeɪp]","frequency":25,"meaning":"逃跑;逃脱;避开"},
+{"word":"impression","phonetic":"[ɪmˈpreʃn]","frequency":6,"meaning":"印象"},
+{"word":"headline","phonetic":"[ˈhedlaɪn]","frequency":8,"meaning":"新闻提要"},
+{"word":"revolution","phonetic":"[ˌrevəˈluːʃn]","frequency":6,"meaning":"革命;改革"},
+{"word":"undergo","phonetic":"[ˌʌndəˈɡəʊ]","frequency":5,"meaning":"经历;经受"},
+{"word":"sector","phonetic":"[ˈsektə(r)]","frequency":8,"meaning":"部门;行业;领域"},
+{"word":"affordable","phonetic":"[əˈfɔːdəbl]","frequency":7,"meaning":"价格合理的"},
+{"word":"advertising","phonetic":"[ˈædvətaɪzɪŋ]","frequency":8,"meaning":"广告;广告业;广告活动"},
+{"word":"accessible","phonetic":"[əkˈsesəbl]","frequency":6,"meaning":"可进入的"},
+{"word":"legacy","phonetic":"[ˈlegəsi]","frequency":8,"meaning":"遗产;遗赠"},
+{"word":"funding","phonetic":"[ˈfʌndɪŋ]","frequency":9,"meaning":"政府或机构的资金"},
+{"word":"carbon","phonetic":"[ˈkaːbən]","frequency":7,"meaning":"碳"},
+{"word":"though","phonetic":"[ðəʊ]","frequency":27,"meaning":"conj.虽然;尽管"},
+{"word":"essential","phonetic":"[ɪˈsenʃl]","frequency":11,"meaning":"基本的;本质的"},
+{"word":"due","phonetic":"[djuː]","frequency":10,"meaning":"adj.由于;因为"},
+{"word":"intelligence","phonetic":"[ɪnˈtelɪdʒəns]","frequency":21,"meaning":"才智;智慧"},
+{"word":"frequent","phonetic":"[ˈfriːkwənt]","frequency":7,"meaning":"频繁的"},
+{"word":"general","phonetic":"[ˈdʒenrəl]","frequency":28,"meaning":"常规的;首席的"},
+{"word":"engage","phonetic":"[ɪnˈgeɪdʒ]","frequency":33,"meaning":"参加;雇用"},
+{"word":"depend","phonetic":"[dɪˈpend]","frequency":24,"meaning":"依靠;信赖"},
+{"word":"elderly","phonetic":"[ˈeldəli]","frequency":8,"meaning":"adj.年纪较大的n.老人"},
+{"word":"description","phonetic":"[dɪˈskrɪpʃn]","frequency":5,"meaning":"描述;形容"},
+{"word":"security","phonetic":"[sɪˈkjʊərəti]","frequency":47,"meaning":"安全;保证"},
+{"word":"instrument","phonetic":"[ˈɪnstrəmənt]","frequency":14,"meaning":"器械;仪器"},
+{"word":"defend","phonetic":"[dɪˈfend]","frequency":6,"meaning":"辩护;保卫"},
+{"word":"moral","phonetic":"[ˈmɒrəl]","frequency":27,"meaning":"道德的"},
+{"word":"bond","phonetic":"[bɒnd]","frequency":18,"meaning":"n.纽带;关系"},
+{"word":"fame","phonetic":"[feɪm]","frequency":14,"meaning":"名声;声誉"},
+{"word":"nevertheless","phonetic":"[ˌnevəðəˈles]","frequency":5,"meaning":"adv.不过"},
+{"word":"recognition","phonetic":"[ˌrekəgˈnɪʃn]","frequency":19,"meaning":"承认;认出"},
+{"word":"territory","phonetic":"[ˈterətri]","frequency":15,"meaning":"领土;版图"},
+{"word":"draft","phonetic":"[draːft]","frequency":6,"meaning":"n.草稿"},
+{"word":"wage","phonetic":"[weɪdʒ]","frequency":17,"meaning":"工资"},
+{"word":"regard","phonetic":"[rɪˈgaːd]","frequency":19,"meaning":"v.将...认为"},
+{"word":"throughout","phonetic":"[θruːˈaʊt]","frequency":13,"meaning":"prep.遍及;贯穿"},
+{"word":"ensure","phonetic":"[ɪnˈʃʊə(r)]","frequency":18,"meaning":"保证;确保"},
+{"word":"appropriate","phonetic":"[əˈprəʊpriət]","frequency":5,"meaning":"合适的"},
+{"word":"adopt","phonetic":"[əˈdɒpt]","frequency":6,"meaning":"采用;采取"},
+{"word":"motivation","phonetic":"[ˌməʊtɪˈveɪʃn]","frequency":13,"meaning":"动力;动机"},
+{"word":"adapt","phonetic":"[əˈdæpt]","frequency":13,"meaning":"使适用"},
+{"word":"assess","phonetic":"[əˈses]","frequency":8,"meaning":"评估"},
+{"word":"refer","phonetic":"[rɪˈfɜː(r)]","frequency":24,"meaning":"提到;涉及"},
+{"word":"estimate","phonetic":"[ˈestɪmət]","frequency":13,"meaning":"v.估计;估价"},
+{"word":"cognitive","phonetic":"[ˈkɒgnətɪv]","frequency":7,"meaning":"认知的"},
+{"word":"commit","phonetic":"[kəˈmɪt]","frequency":7,"meaning":"忠于;承诺"},
+{"word":"track","phonetic":"[træk]","frequency":26,"meaning":"v.追踪;跟踪"},
+{"word":"wonder","phonetic":"[ˈwʌndə(r)]","frequency":17,"meaning":"v.琢磨;惊叹"},
+{"word":"psychologist","phonetic":"[saɪˈkɒlədʒɪst]","frequency":9,"meaning":"心理学家"},
+{"word":"deserve","phonetic":"[dɪˈzɜːv]","frequency":7,"meaning":"值得;应得"},
+{"word":"suffer","phonetic":"[ˈsʌfə(r)]","frequency":28,"meaning":"遭受;承受"},
+{"word":"rational","phonetic":"[ˈræʃnəl]","frequency":5,"meaning":"合理的"},
+{"word":"launch","phonetic":"[lɔːntʃ]","frequency":8,"meaning":"v.发起;发射"},
+{"word":"extent","phonetic":"[ɪkˈstent]","frequency":5,"meaning":"程度;限度"},
+{"word":"authentic","phonetic":"[ɔːˈθentɪk]","frequency":6,"meaning":"真正的;真实的"},
+{"word":"fundamental","phonetic":"[ˌfʌndəˈmentl]","frequency":7,"meaning":"基础的"},
+{"word":"adverse","phonetic":"[ədˈvɜːs]","frequency":5,"meaning":"不利的;有害的"},
+{"word":"diverse","phonetic":"[daɪˈvɜːs]","frequency":6,"meaning":"不同的"},
+{"word":"fuel","phonetic":"[ˈfjuːəl]","frequency":22,"meaning":"n.燃料"},
+{"word":"sake","phonetic":"[seɪk]","frequency":6,"meaning":"目的;理由"},
+{"word":"account","phonetic":"[əˈkaʊnt]","frequency":8,"meaning":"n.账户;账目"},
+{"word":"invest","phonetic":"[ɪnˈvest]","frequency":8,"meaning":"v.投资"},
+{"word":"campaign","phonetic":"[kæmˈpeɪn]","frequency":10,"meaning":"n.运动"},
+{"word":"interaction","phonetic":"[ˌɪntərˈækʃən]","frequency":24,"meaning":"交流"},
+{"word":"stock","phonetic":"[stɒk]","frequency":6,"meaning":"n.股票"},
+{"word":"vary","phonetic":"[ˈveəri]","frequency":16,"meaning":"(使)呈现差异"},
+{"word":"extend","phonetic":"[ɪkˈstend]","frequency":12,"meaning":"伸出;伸开"},
+{"word":"phenomenon","phonetic":"[fəˈnɒmɪnən]","frequency":13,"meaning":"现象"},
+{"word":"ignore","phonetic":"[ɪgˈnɔː(r)]","frequency":9,"meaning":"忽视;不予理睬"},
+{"word":"foundation","phonetic":"[faʊnˈdeɪʃn]","frequency":8,"meaning":"基金会;基础"},
+{"word":"oppose","phonetic":"[əˈpəʊz]","frequency":8,"meaning":"反对;阻止"},
+{"word":"vision","phonetic":"[ˈvɪʒn]","frequency":7,"meaning":"幻觉;视力"},
+{"word":"enhance","phonetic":"[ɪnˈhaːns]","frequency":10,"meaning":"提高;增加"},
+{"word":"shortly","phonetic":"[ˈʃɔːtli]","frequency":5,"meaning":"不久;立刻"},
+{"word":"limited","phonetic":"[ˈlɪmɪtɪd]","frequency":15,"meaning":"有限的"},
+{"word":"switch","phonetic":"[swɪtʃ]","frequency":10,"meaning":"v.转换;交换"},
+{"word":"prospect","phonetic":"[ˈprɒspekt]","frequency":6,"meaning":"n.展望;前景"},
+{"word":"recently","phonetic":"[ˈriːsntli]","frequency":15,"meaning":"不久前;最近"},
+{"word":"deal","phonetic":"[diːl]","frequency":56,"meaning":"adj.理想的;空想的n.理想"},
+{"word":"navigate","phonetic":"[ˈnævɪgeɪt]","frequency":9,"meaning":"v.导航;航行"},
+{"word":"autonomy","phonetic":"[ɔːˈtɒnəmɪ]","frequency":4,"meaning":"自治;自治权"},
+{"word":"prey","phonetic":"[preɪ]","frequency":5,"meaning":"n.猎物"},
+{"word":"critic","phonetic":"[ˈkrɪtɪk]","frequency":11,"meaning":"批评者;反对者;评论家"},
+{"word":"digital","phonetic":"[ˈdɪdʒɪtl]","frequency":19,"meaning":"数字的;数码的"},
+{"word":"worldwide","phonetic":"[ˌwɜːldˈwaɪd]","frequency":9,"meaning":"adj.世界各地的"},
+{"word":"victim","phonetic":"[ˈvɪktɪm]","frequency":4,"meaning":"受害者;罹难者"},
+{"word":"historic","phonetic":"[hɪˈstɒrɪk]","frequency":5,"meaning":"历史上著名的"},
+{"word":"intend","phonetic":"[ɪnˈtend]","frequency":6,"meaning":"打算;意指"},
+{"word":"material","phonetic":"[məˈtɪəriəl]","frequency":25,"meaning":"n.材料;原料"},
+{"word":"instruction","phonetic":"[ɪnˈstrʌkʃn]","frequency":8,"meaning":"指示;指导"},
+{"word":"destruction","phonetic":"[dɪˈstrʌkʃn]","frequency":5,"meaning":"摧毁;毁灭"},
+{"word":"multiple","phonetic":"[ˈmʌltɪpl]","frequency":8,"meaning":"adj.多种多样的"},
+{"word":"foster","phonetic":"[ˈfɒstə(r)]","frequency":10,"meaning":"v.促进;培养"},
+{"word":"facilitate","phonetic":"[fəˈsɪlɪteɪt]","frequency":7,"meaning":"促进;使便利"},
+{"word":"reference","phonetic":"[ˈrefrəns]","frequency":4,"meaning":"参考;查阅"},
+{"word":"delay","phonetic":"[dɪˈleɪ]","frequency":5,"meaning":"n.延期;延误"},
+{"word":"regulation","phonetic":"[ˌregjuˈleɪʃn]","frequency":8,"meaning":"章程;规章制度"},
+{"word":"examine","phonetic":"[ɪgˈzæmɪn]","frequency":8,"meaning":"审查;检验"},
+{"word":"practical","phonetic":"[ˈpræktɪkl]","frequency":14,"meaning":"有用的;实际的"},
+{"word":"guideline","phonetic":"[ˈgaɪdlaɪn]","frequency":7,"meaning":"准则;指导原则"},
+{"word":"urban","phonetic":"[ˈɜːbən]","frequency":8,"meaning":"城市的;都市的"},
+{"word":"suppose","phonetic":"[səˈpəʊz]","frequency":10,"meaning":"v.料想;假定"},
+{"word":"awareness","phonetic":"[əˈweənəs]","frequency":11,"meaning":"认识;意识"},
+{"word":"crop","phonetic":"[krɒp]","frequency":13,"meaning":"庄稼;作物"},
+{"word":"exposure","phonetic":"[ɪkˈspəʊʒə(r)]","frequency":4,"meaning":"接触;体验"},
+{"word":"regular","phonetic":"[ˈregjələ(r)]","frequency":12,"meaning":"规则的"},
+{"word":"creative","phonetic":"[kriˈeɪtɪv]","frequency":12,"meaning":"创造性的"},
+{"word":"perception","phonetic":"[pəˈsepʃn]","frequency":9,"meaning":"感觉;感知"},
+{"word":"reject","phonetic":"[rɪˈdʒekt]","frequency":12,"meaning":"拒绝;拒绝接受"},
+{"word":"confident","phonetic":"[ˈkɒnfɪdənt]","frequency":4,"meaning":"自信的"},
+{"word":"strengthen","phonetic":"[ˈstreŋθn]","frequency":9,"meaning":"加强;增强"},
+{"word":"equal","phonetic":"[ˈiːkwəl]","frequency":6,"meaning":"adj.同样的;相等的"},
+{"word":"protest","phonetic":"[ˈprəʊtest]","frequency":4,"meaning":"n.抗议"},
+{"word":"assume","phonetic":"[əˈsjuːm]","frequency":6,"meaning":"假定;假设"},
+{"word":"domestic","phonetic":"[dəˈmestɪk]","frequency":7,"meaning":"本国的;国内的"},
+{"word":"integrate","phonetic":"[ˈɪntɪgreɪt]","frequency":8,"meaning":"v.成为一体"},
+{"word":"strike","phonetic":"[straɪk]","frequency":11,"meaning":"v.罢工"},
+{"word":"argue","phonetic":"[ˈaːgjuː]","frequency":16,"meaning":"v.论证;争吵;争论"},
+{"word":"contemporary","phonetic":"[kənˈtemprəri]","frequency":6,"meaning":"现代的"},
+{"word":"longevity","phonetic":"[lɒnˈdʒevəti]","frequency":4,"meaning":"持久;长寿"},
+{"word":"budget","phonetic":"[ˈbʌdʒɪt]","frequency":11,"meaning":"n.预算"},
+{"word":"billion","phonetic":"[ˈbɪljən]","frequency":10,"meaning":"十亿"},
+{"word":"requirement","phonetic":"[rɪˈkwaɪəmənt]","frequency":8,"meaning":"要求"},
+{"word":"devote","phonetic":"[dɪˈvəʊt]","frequency":8,"meaning":"专心于"},
+{"word":"indicate","phonetic":"[ˈɪndɪkeɪt]","frequency":19,"meaning":"表明;显示"},
+{"word":"capacity","phonetic":"[kəˈpæsəti]","frequency":11,"meaning":"n.容量;能力"},
+{"word":"vital","phonetic":"[ˈvaɪtl]","frequency":6,"meaning":"极其重要的"},
+{"word":"integrity","phonetic":"[ɪnˈtegrəti]","frequency":5,"meaning":"完整;完好"},
+{"word":"cultivate","phonetic":"[ˈkʌltɪveɪt]","frequency":9,"meaning":"耕作;培养"},
+{"word":"equality","phonetic":"[iˈkwɒləti]","frequency":14,"meaning":"均等;平等"},
+{"word":"update","phonetic":"[ˌʌpˈdeɪt]","frequency":6,"meaning":"v.使现代化;更新"},
+{"word":"creation","phonetic":"[kriˈeɪʃn]","frequency":11,"meaning":"创作;创建"},
+{"word":"exact","phonetic":"[ɪgˈzækt]","frequency":6,"meaning":"准确的;确切的"},
+{"word":"publish","phonetic":"[ˈpʌblɪʃ]","frequency":39,"meaning":"发布;出版"},
+{"word":"confront","phonetic":"[kənˈfrʌnt]","frequency":7,"meaning":"正视;直面"},
+{"word":"suspension","phonetic":"[səˈspenʃn]","frequency":3,"meaning":"暂停;延缓"},
+{"word":"rather","phonetic":"[raːðə(r)]","frequency":24,"meaning":"adv.相当;而不是"},
+{"word":"reduction","phonetic":"[rɪˈdʌkʃn]","frequency":8,"meaning":"减少;缩小"},
+{"word":"beforehand","phonetic":"[bɪˈfɔːhænd]","frequency":4,"meaning":"adv.预先;事先"},
+{"word":"lifespan","phonetic":"[ˈlaɪfspæn]","frequency":4,"meaning":"寿命"},
+{"word":"medium","phonetic":"[ˈmiːdiəm]","frequency":24,"meaning":"adj.中间的n.媒介"},
+{"word":"increasingly","phonetic":"[ɪnˈkriːsɪŋli]","frequency":26,"meaning":"adv.越来越多地"},
+{"word":"initiative","phonetic":"[ɪˈnɪʃətɪv]","frequency":9,"meaning":"n.倡议;主动权"},
+{"word":"executive","phonetic":"[ɪgˈzekjətɪv]","frequency":9,"meaning":"adj.行政的n.主管;行政部门"},
+{"word":"statistics","phonetic":"[stəˈtɪstɪks]","frequency":5,"meaning":"统计学;统计数字"},
+{"word":"frame","phonetic":"[freɪm]","frequency":4,"meaning":"n.模式;框架"},
+{"word":"forum","phonetic":"[ˈfɔːrəm]","frequency":5,"meaning":"(网上的)论坛;讨论会"},
+{"word":"emerge","phonetic":"[iˈmɜːdʒ]","frequency":11,"meaning":"v.浮现;显露"},
+{"word":"vulnerable","phonetic":"[ˈvʌlnərəbl]","frequency":7,"meaning":"脆弱的"},
+{"word":"resemble","phonetic":"[rɪˈzembl]","frequency":5,"meaning":"v.像;与...相似"},
+{"word":"fellow","phonetic":"[ˈfeləʊ]","frequency":9,"meaning":"adj.同类的;同伴的"},
+{"word":"nut","phonetic":"[nʌt]","frequency":8,"meaning":"n.坚果"},
+{"word":"signal","phonetic":"[ˈsɪgnəl]","frequency":17,"meaning":"v.标志;表明;预示n.信号"},
+{"word":"trick","phonetic":"[trɪk]","frequency":17,"meaning":"n.花招;把戏;恶作剧"},
+{"word":"credit","phonetic":"[ˈkredɪt]","frequency":24,"meaning":"n.信用;借款;贷款"},
+{"word":"tear","phonetic":"[tɪə(r)]","frequency":8,"meaning":"n.眼泪;泪水"},
+{"word":"deliver","phonetic":"[dɪˈlɪvə(r)]","frequency":10,"meaning":"v.传达;递送"},
+{"word":"origin","phonetic":"[ˈɒrɪdʒɪn]","frequency":43,"meaning":"起源;起因"},
+{"word":"electronic","phonetic":"[ɪlekˈtrɒnɪk]","frequency":22,"meaning":"电子的"},
+{"word":"maintenance","phonetic":"[ˈmeɪntənəns]","frequency":13,"meaning":"维护;保养"},
+{"word":"genius","phonetic":"[ˈdʒiːniəs]","frequency":10,"meaning":"天赋;天才"},
+{"word":"review","phonetic":"[rɪˈvjuː]","frequency":14,"meaning":"回顾;书评"},
+{"word":"surround","phonetic":"[səˈraʊnd]","frequency":11,"meaning":"v.围绕;环绕"},
+{"word":"criticism","phonetic":"[ˈkrɪtɪsɪzəm]","frequency":15,"meaning":"批评;指责"},
+{"word":"naturally","phonetic":"[ˈnætʃrəli]","frequency":11,"meaning":"adv.自然地"},
+{"word":"assert","phonetic":"[əˈsɜːt]","frequency":13,"meaning":"维护;维持"},
+{"word":"handful","phonetic":"[ˈhændfʊl]","frequency":5,"meaning":"少数;一把"},
+{"word":"facility","phonetic":"[fəˈsɪləti]","frequency":27,"meaning":"设施;设备"},
+{"word":"northern","phonetic":"[ˈnɔːðərn]","frequency":9,"meaning":"北方的"},
+{"word":"blame","phonetic":"[bleɪm]","frequency":16,"meaning":"v.责怪"},
+{"word":"division","phonetic":"[dɪˈvɪʒn]","frequency":7,"meaning":"分开;差异"},
+{"word":"adventure","phonetic":"[ədˈventʃə(r)]","frequency":5,"meaning":"n.冒险"},
+{"word":"norm","phonetic":"[nɔːm]","frequency":5,"meaning":"标准;社会准则"},
+{"word":"jam","phonetic":"[dʒæm]","frequency":17,"meaning":"n.堵塞;拥挤;果酱"},
+{"word":"stain","phonetic":"[steɪn]","frequency":11,"meaning":"n.污渍v.玷污"},
+{"word":"optimism","phonetic":"[ˈɒptɪmɪzəm]","frequency":15,"meaning":"乐观;乐观主义"},
+{"word":"intense","phonetic":"[ɪnˈtens]","frequency":17,"meaning":"激烈的;严肃紧张的"},
+{"word":"hardship","phonetic":"[ˈhaːdʃɪp]","frequency":12,"meaning":"艰难;艰苦"},
+{"word":"rarely","phonetic":"[ˈreəli]","frequency":10,"meaning":"adv.罕有;很少"},
+{"word":"influential","phonetic":"[ˌɪnfluˈenʃl]","frequency":18,"meaning":"有影响力的"},
+{"word":"ambitious","phonetic":"[æmˈbɪʃəs]","frequency":18,"meaning":"有野心的"},
+{"word":"misunderstand","phonetic":"[ˌmɪsʌndərˈstænd]","frequency":19,"meaning":"误解"},
+{"word":"discourse","phonetic":"[ˈdɪskɔːs]","frequency":3,"meaning":"n.语篇;言语"},
+{"word":"sustainable","phonetic":"[səˈsteɪnəbl]","frequency":10,"meaning":"可持续的"},
+{"word":"cooperate","phonetic":"[kəʊˈɒpəreɪt]","frequency":20,"meaning":"合作;协作"},
+{"word":"autonomous","phonetic":"[ɔːˈtɒnəməs]","frequency":7,"meaning":"自治的;有自治权的"},
+{"word":"facial","phonetic":"[ˈfeɪʃl]","frequency":12,"meaning":"面部的"},
+{"word":"approximately","phonetic":"[əˈprɒksɪmətli]","frequency":21,"meaning":"大概地"},
+{"word":"conservation","phonetic":"[ˌkɒnsəˈveɪʃn]","frequency":12,"meaning":"保护;保持"},
+{"word":"wildlife","phonetic":"[ˈwaɪldlaɪf]","frequency":18,"meaning":"野生动物"},
+{"word":"extensive","phonetic":"[ɪkˈstensɪv]","frequency":12,"meaning":"广阔的;大量的"},
+{"word":"evolve","phonetic":"[iˈvɒlv]","frequency":15,"meaning":"进化;演变"},
+{"word":"military","phonetic":"[ˈmɪlətri]","frequency":17,"meaning":"adj.军事的;军用的"},
+{"word":"legal","phonetic":"[ˈliːɡl]","frequency":19,"meaning":"法律的;合法的"},
+{"word":"absence","phonetic":"[ˈæbsəns]","frequency":25,"meaning":"缺席;缺乏"},
+{"word":"progress","phonetic":"[ˈprəʊgres]","frequency":32,"meaning":"进步;进展"},
+{"word":"drug","phonetic":"[drʌg]","frequency":12,"meaning":"n.药;药物;毒品"},
+{"word":"marine","phonetic":"[məˈriːn]","frequency":8,"meaning":"海洋的;海产的"},
+{"word":"confirm","phonetic":"[kənˈfɜːm]","frequency":12,"meaning":"证实;确认"},
+{"word":"expansion","phonetic":"[ɪkˈspænʃn]","frequency":10,"meaning":"扩张;扩展"},
+{"word":"belong","phonetic":"[bɪˈlɒŋ]","frequency":11,"meaning":"属于;归属"},
+{"word":"cancer","phonetic":"[ˈkænsə(r)]","frequency":13,"meaning":"癌;癌症"},
+{"word":"guard","phonetic":"[gaːd]","frequency":15,"meaning":"v./n.保卫;看守"},
+{"word":"harmful","phonetic":"[ˈhaːmfl]","frequency":26,"meaning":"有害的"},
+{"word":"shame","phonetic":"[ʃeɪm]","frequency":13,"meaning":"羞愧;让人遗憾的事"},
+{"word":"council","phonetic":"[ˈkaʊnsl]","frequency":10,"meaning":"委员会;地方议会"},
+{"word":"persuade","phonetic":"[pəˈsweɪd]","frequency":19,"meaning":"劝说;说服"},
+{"word":"fiction","phonetic":"[ˈfɪkʃn]","frequency":8,"meaning":"小说;虚构的事"},
+{"word":"corporation","phonetic":"[ˌkɔːpəˈreɪʃn]","frequency":12,"meaning":"法人;(大)公司"},
+{"word":"superior","phonetic":"[suːˈpɪəriə(r)]","frequency":20,"meaning":"更好的"},
+{"word":"release","phonetic":"[rɪˈliːs]","frequency":17,"meaning":"发布;释放;解雇"},
+{"word":"landscape","phonetic":"[ˈlændskeɪp]","frequency":10,"meaning":"风景"},
+{"word":"burst","phonetic":"[bɜːst]","frequency":9,"meaning":"v./n.爆裂"},
+{"word":"extension","phonetic":"[ɪkˈstenʃn]","frequency":12,"meaning":"延长期;扩大"},
+{"word":"adolescent","phonetic":"[ˌædəˈlesnt]","frequency":17,"meaning":"n.青少年"},
+{"word":"transport","phonetic":"[ˈtrænspɔːt]","frequency":33,"meaning":"n.运输业;交通"},
+{"word":"accuracy","phonetic":"[ˈækjərəsi]","frequency":11,"meaning":"准确性;精确度"},
+{"word":"stability","phonetic":"[stəˈbɪləti]","frequency":8,"meaning":"稳定(性)"},
+{"word":"phase","phonetic":"[feɪz]","frequency":10,"meaning":"n.阶段;时期"},
+{"word":"apparently","phonetic":"[əˈpærəntli]","frequency":10,"meaning":"adv.看来;显然"},
+{"word":"citizen","phonetic":"[ˈsɪtɪzn]","frequency":25,"meaning":"公民"},
+{"word":"latter","phonetic":"[ˈlætə(r)]","frequency":8,"meaning":"adj.后者的n.后者"},
+{"word":"distribution","phonetic":"[ˌdɪstrɪˈbjuːʃn]","frequency":13,"meaning":"分布;分配"},
+{"word":"operation","phonetic":"[ˌɒpəˈreɪʃn]","frequency":26,"meaning":"运作;操作;手术;企业"},
+{"word":"arouse","phonetic":"[əˈraʊz]","frequency":11,"meaning":"引起;唤醒"},
+{"word":"discipline","phonetic":"[ˈdɪsəplɪn]","frequency":17,"meaning":"纪律;学科"},
+{"word":"detailed","phonetic":"[ˈdiːteɪld]","frequency":5,"meaning":"详细的"},
+{"word":"revolutionary","phonetic":"[ˌrevəˈluːʃənəri]","frequency":13,"meaning":"革命的"},
+{"word":"applicant","phonetic":"[ˈæplɪkənt]","frequency":18,"meaning":"申请人"}
+];
+
+        // ************************ 全局变量与功能逻辑（无需修改） ************************
+        const wordList = document.getElementById('word-list');
+        const searchInput = document.getElementById('search-input');
+        const filterSelect = document.getElementById('filter-select');
+        const noResult = document.getElementById('no-result');
+        const datePicker = document.getElementById('date-picker');
+        const markTodayBtn = document.getElementById('mark-today');
+        const markTip = document.getElementById('mark-tip');
+        const markedIndex = document.getElementById('marked-index');
+        const todayDateEl = document.getElementById('today-date');
+        const collapsePanelBtn = document.getElementById('collapse-panel');
+        let currentWords = [...wordData];
+        let scrollPositionMap = {}; // 存储日期-背诵位置映射
+        const today = new Date().toISOString().split('T')[0]; // 今日日期（YYYY-MM-DD）
+
+        // 初始化今日日期显示
+        todayDateEl.textContent = formatDate(today);
+
+        // 日期格式化（YYYY-MM-DD → 年月日）
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+        }
+
+        // 从localStorage加载背诵标记
+        function loadScrollPositions() {
+            const saved = localStorage.getItem('wordScrollPositions');
+            scrollPositionMap = saved ? JSON.parse(saved) : {};
+            // 日期选择器默认选中今日
+            datePicker.value = today;
+        }
+
+        // 保存背诵标记到localStorage
+        function saveScrollPosition(date, index) {
+            scrollPositionMap[date] = index;
+            localStorage.setItem('wordScrollPositions', JSON.stringify(scrollPositionMap));
+        }
+
+        // 单词发音
+        const speakWord = (word) => {
+            if (!window.speechSynthesis) {
+                alert("你的浏览器不支持语音发音功能，请更换Chrome/Edge/Firefox浏览器");
+                return;
+            }
+            speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            speechSynthesis.speak(utterance);
+        };
+
+        // 渲染单词列表
+        const renderWords = (words) => {
+            wordList.innerHTML = '';
+            if (words.length === 0) {
+                wordList.classList.add('hidden');
+                noResult.classList.remove('hidden');
+                return;
+            }
+            wordList.classList.remove('hidden');
+            noResult.classList.add('hidden');
+            words.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-card rounded-lg border border-gray-100 p-5 shadow-sm word-card-hover';
+                card.dataset.index = index; // 标记单词索引
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-lg word-click" data-word="${item.word}">${item.word}</h3>
+                        <span class="freq-tag">考频${item.frequency}</span>
+                    </div>
+                    <p class="phonetic-text mb-3">${item.phonetic}</p>
+                    <p class="text-gray-700">${item.meaning}</p>
+                `;
+                card.querySelector('.word-click').addEventListener('click', (e) => {
+                    speakWord(e.target.dataset.word);
+                });
+                wordList.appendChild(card);
+            });
+            // 渲染后恢复对应日期的滚动位置
+            const targetIndex = scrollPositionMap[datePicker.value];
+            if (targetIndex !== undefined && targetIndex < words.length) {
+                const targetCard = wordList.querySelector(`[data-index="${targetIndex}"]`);
+                targetCard?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // 高亮标记的单词
+                targetCard?.classList.add('border-accent', 'shadow-accent/20');
+            }
+        };
+
+        // 考频筛选
+        const filterByFreq = (type) => {
+            if (type === 'default') {
+                currentWords = [...wordData];
+            } else if (type === 'asc') {
+                currentWords.sort((a, b) => a.frequency - b.frequency);
+            } else {
+                currentWords.sort((a, b) => b.frequency - a.frequency);
+            }
+            renderWords(currentWords);
+        };
+
+        // 中英文搜索
+        const searchWords = (keyword) => {
+            if (!keyword) {
+                currentWords = [...wordData];
+                filterByFreq(filterSelect.value);
+                return;
+            }
+            const lowerKey = keyword.toLowerCase();
+            currentWords = wordData.filter(item => 
+                item.word.toLowerCase().includes(lowerKey) || 
+                item.meaning.includes(keyword)
+            );
+            renderWords(currentWords);
+        };
+
+        // 标记今日背诵位置
+        const markCurrentPosition = () => {
+            if (currentWords.length === 0) {
+                alert("暂无单词可标记，请先添加单词数据");
+                return;
+            }
+            // 获取当前可视区域第一个单词的索引
+            const cards = wordList.querySelectorAll('[data-index]');
+            let currentIndex = 0;
+            for (let card of cards) {
+                const rect = card.getBoundingClientRect();
+                if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
+                    currentIndex = parseInt(card.dataset.index);
+                    break;
+                }
+            }
+            // 保存标记
+            saveScrollPosition(today, currentIndex);
+            // 显示提示
+            markedIndex.textContent = currentIndex + 1; // 索引从1开始显示
+            markTip.classList.remove('hidden');
+            // 高亮当前标记的单词
+            cards.forEach(card => card.classList.remove('border-accent', 'shadow-accent/20'));
+            cards[currentIndex]?.classList.add('border-accent', 'shadow-accent/20');
+        };
+
+        // 日期选择器跳转
+        const handleDateChange = (e) => {
+            const selectedDate = e.target.value;
+            if (!selectedDate) return;
+            filterByFreq(filterSelect.value); // 重新渲染列表
+        };
+
+        // 手机端折叠/展开标记面板
+        const togglePanel = () => {
+            const panel = document.querySelector('.bg-card.p-3.rounded-lg');
+            panel.classList.toggle('hidden');
+            const icon = collapsePanelBtn.querySelector('i');
+            icon.classList.toggle('fa-chevron-up');
+            icon.classList.toggle('fa-chevron-down');
+        };
+
+        // 事件监听
+        window.onload = () => {
+            loadScrollPositions();
+            filterByFreq('default');
+        };
+
+        filterSelect.addEventListener('change', (e) => {
+            filterByFreq(e.target.value);
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            searchWords(e.target.value.trim());
+        });
+
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.target.blur();
+            }
+        });
+
+        datePicker.addEventListener('change', handleDateChange);
+
+        markTodayBtn.addEventListener('click', markCurrentPosition);
+
+        collapsePanelBtn.addEventListener('click', togglePanel);
+
+        window.onbeforeunload = () => {
+            speechSynthesis.cancel();
+        };
+    </script>
+</body>
+</html>
